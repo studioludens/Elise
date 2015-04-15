@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com:GlowCanvas 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:com="com.spruit.components.*" 
+	
+	width="326" height="390" xmlns:cl="classes.*" 
+	backgroundColor="#111111" backgroundAlpha=".6"
+	 horizontalScrollPolicy="off" verticalScrollPolicy="off"
+	  defaultButton="{signup}">
+	
+	<mx:Metadata>
+	 	[Event(name="userRegister", type="com.spruit.events.UserRegisterEvent")]
+	 </mx:Metadata>
+	 
+	<mx:Script>
+		<![CDATA[
+		
+			import com.spruit.events.*;
+			
+			private function onRegisterClick():void {
+				// do stuff here for when we click on the login button
+				trace("UserRegisterScreen: pressed register button");
+				// send a message to our parent we are ready to login
+				
+				var evt:UserRegisterEvent = new UserRegisterEvent("userRegister", username.text, password.text, email.text, send_updates.selected);
+				
+				// event fire!
+				dispatchEvent(evt);
+			}
+			
+			private function onCancelClick():void {
+				// do stuff here for when we click on the cancel button
+				this.visible = false;
+				this.enabled = false;
+				// remove focus
+				this.resetFocus();
+			}
+		]]>
+	</mx:Script>
+	
+	<!-- validation script -->
+	<mx:Script>
+        <![CDATA[
+            import mx.validators.Validator;
+            import mx.events.ValidationResultEvent;
+            import mx.controls.Alert;
+        
+  
+            [Bindable]
+            public var formIsValid:Boolean = false;
+
+            [Bindable]
+            public var formIsEmpty:Boolean = true;
+    
+            // Holds a reference to the currently focussed 
+            // control on the form.
+            private var focussedFormControl:DisplayObject;
+                                  
+            // Validate the form
+            private function validateForm(event:Event):void 
+            {   
+
+				trace("doing da validation...");     
+                // Save a reference to the currently focussed form control
+                // so that the isValid() helper method can notify only
+                // the currently focussed form control and not affect
+                // any of the other form controls.
+                focussedFormControl = event.target as DisplayObject;    
+
+                // Mark the form as valid to start with                
+                formIsValid = true;            
+
+                // Check if form is empty
+                formIsEmpty = (username.text == "" && password.text == "" && email.text); 
+
+                // Run each validator in turn, using the isValid() 
+                // helper method and update the value of formIsValid
+                // accordingly.
+                
+                validate(form_username_valid); 
+                if(!formIsValid) trace("validation failed on: username");               
+                validate(form_email_valid);
+                if(!formIsValid) trace("validation failed on: email");
+                validate(form_password_valid);
+                if(!formIsValid) trace("validation failed on: password");
+                
+                if(confirm_password.text != password.text){
+                	trace("the confirm password is not right!");
+                	formIsValid = false;
+                }
+                
+                if(!termsagree.selected){
+                	formIsValid = false;
+                }
+                
+                
+                
+            }
+     
+             // Helper method. Performs validation on a passed Validator instance.
+             // Validator is the base class of all Flex validation classes so 
+             // you can pass any validation class to this method.  
+             private function validate(validator:Validator):Boolean
+             {                
+             	
+             	// if we can't find the form element we need, don't bother
+             	if(!validator.source) return true;
+             	
+             	
+             	
+                // Get a reference to the component that is the
+                // source of the validator.
+                 var validatorSource:DisplayObject = validator.source as DisplayObject;
+                 
+                
+                
+                // Suppress events if the current control being validated is not
+                // the currently focussed control on the form. This stops the user
+                // from receiving visual validation cues on other form controls.
+                var suppressEvents:Boolean = (validatorSource != focussedFormControl);
+                
+                // Carry out validation. Returns a ValidationResultEvent.
+                // Passing null for the first parameter makes the validator 
+                // use the property defined in the property tag of the
+                // <mx:Validator> tag.
+                var event:ValidationResultEvent = validator.validate(null, suppressEvents); 
+                                
+                // Check if validation passed and return a boolean value accordingly
+                 var currentControlIsValid:Boolean = (event.type == ValidationResultEvent.VALID);
+                 
+                 // Update the formIsValid flag
+                 formIsValid = formIsValid && currentControlIsValid;
+                 
+                 return currentControlIsValid;
+              }
+              
+              // Event handler: Gets called when all child components
+              // have been created.
+              private function creationCompleteHandler():void
+              {
+                // Set the focus on the first field so 
+                // user does not have to mouse over to it.
+                // Note that the user still has to click on the 
+                // Flex application to give it focus. This is 
+                // a currently limitation in Flex.
+                  //resetFocus(); 
+              }
+            
+            // Submit form if everything is valid. 
+            private function submitForm():void 
+            {
+                Alert.show("Form Submitted!"); 
+            }
+            
+            // Clear the form and reset validation
+            private function clearFormHandler():void
+            {
+                // Clear all input fields
+                username.text = "";         
+                password.text = "";
+                email.text = "";
+                confirm_password.text = "";
+                
+                // Clear validation error messages
+                username.errorString = "";  
+                password.errorString = "";
+                email.errorString = "";
+                confirm_password.errorString = "";
+                
+                termsagree.selected = false;
+                send_updates.selected = false;
+                
+                // Flag that the form is now clear
+                formIsEmpty = true;
+                
+                // Set the focus on the first field so 
+                // user does not have to mouse over to it.
+                resetFocus();               
+            }
+            
+            // Helper method. Sets the focus on the first field so 
+            // user does not have to mouse over to it.
+            public function resetFocus():void
+            {
+                focusManager.setFocus(username);
+            }
+            
+            public function reset():void {
+            	clearFormHandler();
+            }
+        ]]>
+    </mx:Script>
+    
+    <!-- these will help us with validating form input -->
+
+    <mx:StringValidator id="form_username_valid" 
+    	required="true" source="{username}" 
+    	property="text" 
+    	minLength="3" 
+    	maxLength="100"
+    	requiredFieldError="We need a valid user name to log you in"/>
+    
+    <mx:StringValidator 
+    	id="form_password_valid" 
+    	requiredFieldError="We need your password to log you in"
+    	required="true" 
+    	source="{password}" 
+    	property="text" 
+    	minLength="3" 
+    	maxLength="30"/>
+    	
+    <mx:EmailValidator  id="form_email_valid" required="true" source="{email}" property="text"/>
+   
+    
+    <mx:Text y="49" text="When you register, you will be able to save your designs. We take your privacy seriously. (privacy policy)" left="15" right="15" fontSize="13"/>
+     <mx:Label y="10" text="get your own ludens:id" height="41" right="15" left="15" fontSize="22"/>
+     
+    
+    <cl:GlowButton 
+     	id="signup" 
+     	label="sign up" 
+     	width="100" 
+     	height="25"
+     	buttonMode="true"
+     	icon="@Embed(source='../../../media/images/pencil.png')"
+     	horizontalGap="5"
+     	click="onRegisterClick()"
+     	enabled="{formIsValid}"
+      left="5" bottom="5"/>
+     <cl:GlowButton 
+    	id="cancel" 
+    	label="cancel" 
+    	width="65" 
+    	height="25"
+    	buttonMode="true"
+    	horizontalGap="5"
+    	click="onCancelClick()"
+     right="5" bottom="5"/>
+     
+     <mx:Form right="5" left="5" top="110" bottom="54" 
+     	paddingBottom="5" 
+     	paddingLeft="5" 
+     	paddingTop="5" 
+     	paddingRight="5"
+     >
+		<mx:FormItem label="my name" required="true" id="frmUserName" width="100%">
+			<mx:TextInput id="username" change="validateForm(event)" width="100%"/>
+		</mx:FormItem>
+		<mx:FormItem label="my password" required="true" id="frmPassword" width="100%">
+		    <mx:TextInput change="validateForm(event)" displayAsPassword="true" id="password" width="100%"/>
+		</mx:FormItem>
+		
+     	<mx:FormItem label="confirm password" required="true" id="frmConfirmPwd" width="100%">
+	    	<mx:TextInput change="validateForm(event)" displayAsPassword="true" id="confirm_password" width="100%"/>
+		</mx:FormItem>
+		
+		<mx:FormItem label="my email is" required="true" id="frmEmail" width="100%">
+	    	<mx:TextInput change="validateForm(event)" id="email"  toolTip="If you want to have the design emailed to you, we need your email address" width="100%"/>
+		</mx:FormItem>
+		<mx:FormItem height="56"  id="frmTerms" required="true" width="100%">
+			<mx:Canvas width="100%" height="53">
+				<mx:CheckBox x="5" y="5" width="21" id="termsagree" change="validateForm(event)"/>
+				<mx:Text y="3" text="I agree to the terms and conditions" height="50" left="25" right="0"/>
+			</mx:Canvas>
+		</mx:FormItem>
+		<mx:FormItem width="100%">
+			<mx:Canvas width="100%" height="35" id="frmUpdate">
+				<mx:CheckBox x="5" y="5" width="21" id="send_updates" change="validateForm(event)"/>
+				<mx:Text text="Keep me updated" height="32" right="0" y="3" left="25"/>
+			</mx:Canvas>
+		</mx:FormItem>
+     </mx:Form>
+     
+   
+</com:GlowCanvas>

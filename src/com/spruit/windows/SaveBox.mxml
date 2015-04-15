@@ -1,0 +1,588 @@
+<?xml version="1.0" encoding="utf-8"?>
+<win:FoldablePanel
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:win="com.spruit.windows.*"
+	layout="absolute" 
+	width="328" 
+	height="258" 
+	title="save my design"
+	 defaultButton="{btnSave}"
+	  hide="onHide(event)"
+	 initialize="init()">
+	 
+	 <mx:Metadata>
+	[Event(name="saved", type="flash.events.Event")]
+	[Event(name="close", type="flash.events.Event")]
+	</mx:Metadata>
+	 
+	<mx:String id="baseUrl">http://localhost/keyshapes/</mx:String>
+    <win:states>
+    	<mx:State>
+    		<mx:SetProperty target="{btnSave}" name="visible" value="true"/>
+    	</mx:State>
+        <mx:State name="saved">
+        	<mx:SetProperty target="{btnSave}" name="visible" value="false"/>
+        	
+        	<mx:AddChild relativeTo="{control_bar}" position="before">
+        			<mx:Text 
+						id="resultText" 
+						selectable="false"
+						kerning="true" leading="8" left="10" right="10" bottom="0" top="10"/>
+	
+        	</mx:AddChild>
+        	
+        	<mx:SetProperty target="{frmBasic}" name="visible" value="false"/>
+        	
+        	<mx:SetProperty target="{btnRegister}" name="visible" value="false"/>
+        	<mx:SetProperty target="{btnRegister}" name="includeInLayout" value="false"/>
+        	<mx:SetProperty name="height" value="232"/>
+        	<mx:SetProperty target="{control_bar}" name="includeInLayout" value="false"/>
+        	
+        	<mx:AddChild relativeTo="{control_bar}" position="lastChild">
+                <mx:Button label="Close" height="40" width="96" right="0" click="toLoggedInState()"/>
+            </mx:AddChild>
+            
+            <mx:RemoveChild target="{btnCancel}"/>
+        </mx:State>
+        
+        <mx:State name="register">
+        
+        	<mx:SetProperty target="{btnSave}" name="label" value="Register and Save"/>
+        	<mx:SetProperty target="{btnSave}" name="width" value="140"/>
+        	<mx:SetProperty target="{btnRegister}" name="visible" value="false"/>
+        
+        	<mx:AddChild relativeTo="{frmBasic}" position="lastChild">
+        		 <mx:FormItem label="confirm password" required="true" id="frmConfirmPwd">
+			    	<mx:TextInput change="validateForm(event)" displayAsPassword="true" id="confirm_password"/>
+				</mx:FormItem>
+        	</mx:AddChild>
+            <mx:AddChild relativeTo="{frmBasic}" position="lastChild">
+	            <mx:FormItem label="my email is" required="true" id="frmEmail">
+			    	<mx:TextInput change="validateForm(event)" id="email"  toolTip="If you want to have the design emailed to you, we need your email address"/>
+				</mx:FormItem>
+            </mx:AddChild>
+            
+            <mx:RemoveChild target="{btnRegister}"/>
+            <mx:SetProperty name="height" value="320"/>
+            
+        </mx:State>
+        <mx:State name="loggedin">
+            
+            
+            <mx:SetProperty target="{frmBasic}" name="height" value="117"/>
+            
+            <mx:SetProperty target="{btnSave}" name="visible" value="true"/>
+            <mx:SetProperty target="{btnSave}" name="label" value="Save"/>
+        	<mx:SetProperty target="{btnSave}" name="width" value="80"/>
+        	
+            <mx:AddChild relativeTo="{btnSave}" position="after">
+                <mx:Button label="Logout" height="40" width="96" click="onLogoutClick()"/>
+            </mx:AddChild>
+            <mx:SetProperty target="{frmPassword}" name="visible" value="false"/>
+            <mx:SetProperty target="{frmUserName}" name="visible" value="false"/>
+            
+            <mx:RemoveChild target="{btnRegister}" />
+        	
+            <mx:SetProperty name="height" value="175"/>
+            
+        </mx:State>
+    </win:states>
+    
+    <win:transitions>
+    	<mx:Transition fromState="*" toState="*">
+    		<mx:Sequence targets="{[this]}">
+    			<mx:Resize target="{this}" duration="150"/>
+    			<mx:SetPropertyAction/>
+    		</mx:Sequence>
+    	</mx:Transition>
+    	
+    </win:transitions>
+    <!-- the scripts we will be using -->
+    
+    <!-- general event handers -->
+    <mx:Script>
+	    <![CDATA[
+	    	import com.gsolo.encryption.MD5;
+	    	import mx.controls.Alert;
+	    	import mx.rpc.events.ResultEvent;
+	    	import com.spruit.vis.KeyShapesTool;
+	    	import mx.events.CloseEvent;
+	    	import mx.utils.Base64Encoder;
+	    	import mx.rpc.http.HTTPService;
+            import mx.managers.PopUpManager;
+            
+            [Bindable] public var shapeType:String = "coaster";
+            [Bindable] public var shapeTool:KeyShapesTool;
+            [Bindable] public var shapeData:String;
+            [Bindable] public var imageData:ByteArray;
+            
+            [Bindable] public var userId:Number;
+            [Bindable] public var loggedIn:Boolean;
+            
+            
+            // timer for general use
+            //private var t:Timer = new Timer(8000, 0);
+            //public var httpService:HTTPService;
+            
+            private function init():void{
+            	//this.drawFocus(true);
+            	//username.setFocus();
+            	this.addEventListener(KeyboardEvent.KEY_DOWN, onKeyDown,true);
+            	
+            }
+            
+            private function onHide(e:Event):void{
+            	trace("hiding the savebox, going back to stage1");
+            	//e.target.currentState = '';
+            	resetFocus();
+            }
+            
+            private function onKeyDown(e:KeyboardEvent):void {
+            	e.stopPropagation();
+            }  
+            
+            private function processSave():void {
+                // save the item to the server
+                // but not before we have done some form validation
+                
+                // the action we want the server to perform. can be a login, or a register new user
+                var action:String = 'login';
+                
+                if(currentState == 'register'){
+                	action = 'register';
+                }
+                
+                if(httpService){
+                	trace("sending data!");
+                	
+                	 
+                	// TODO: fix this ugly method of accessing data by directly connecting one object to the other, 
+                	// thus making them interdependant
+                	// Use design pattern?
+                	if(shapeTool){
+                		shapeData = shapeTool.exportToString();
+                		imageData = shapeTool.getPNGData();
+                	} else {
+                		trace("ERROR(SaveBox): cannot find shapeTool ");
+                		if(this.parentApplication.createCoasterData()){
+                			shapeData = parentApplication.createCoasterData();
+                			imageData = parentApplication.getPNGData();
+                			trace("we have shapeData!" + shapeData);
+                		}
+                	}
+                	
+                	var encImage:String;
+                	
+                	if(imageData){
+	                	var imageDataEnc:Base64Encoder = new Base64Encoder();
+	                	imageDataEnc.encodeBytes(imageData);
+	                	
+                		encImage = imageDataEnc.flush();
+                	} else {
+                		encImage = "";
+                		trace("[ERROR] No imageData to send! Doing it anyway...");
+                	}
+                	
+                	var passwordString:String = "";
+                	
+                	
+                	if(password){
+                		
+                		passwordString = MD5.hex_md5(password.text);
+                		trace("password(new): " + passwordString);
+                	}
+                	
+                	
+                	httpService.send({
+                						userName: username.text, 
+                						designName: designname.text, 
+                						email: (action == 'register' ? email.text : ''),
+                						data: shapeData, 
+                						imageData: encImage, 
+                						type: shapeType,
+                						password: passwordString,
+                						sendEmail: (sendEmail.selected ? "true" : "false"),
+                						action: action
+                						
+                					});
+                					
+                	btnSave.visible = false;
+                	
+                	// don't do this ever again! the service might not be ready with sending, and you delete the objects it's sending... 
+                	// --> asking for trouble	
+                	//shapeData = null;
+                	//imageData = null;
+                	
+                }
+                
+            }
+            
+            private function onSaved(e:ResultEvent):void {
+            	
+            	// set the state to saved
+            	currentState = 'saved';
+            	//btnSave.enabled = false;
+            	
+            	//
+            	
+            	if(httpService.lastResult && httpService.lastResult.response){
+            		
+            		// everything went well, we have a response from the server
+            		
+            		var response:XML = XML(httpService.lastResult.response);
+            		
+            		// now see if we have success
+            		var success:String = httpService.lastResult.response.success;
+            		
+            		trace("success=" + success);
+            		
+            		if(success == 'true'){
+            			trace("we  have success in receiving the data packet!");
+            			// set the message for the user
+            			var message:String = httpService.lastResult.response.message;
+            			var newuser:String = httpService.lastResult.response.newuser;
+            			var logged_in:String = httpService.lastResult.response.user.status;
+            			var user_id:String = httpService.lastResult.response.user.userid;
+            			
+            			resultText.text = message;
+            			
+            			if(!loggedIn){
+            				resultText.text += " You are also logged in. " + 
+            					"This means you don't have to fill in your username and password " + 
+            					"again when you want to save.";
+            			}
+            			
+            			// save userid in session for later use
+            			userId = Number(user_id);
+            			
+            			// save username in session for later use
+            			
+            			loggedIn = true;
+            			
+            			
+            			
+            			trace("saved in session userId=" + userId);
+            			
+            			
+            			// go to the loggedin state after a while
+            			//t.addEventListener(TimerEvent.TIMER, timeoutTextFade);
+            			//t.start();
+            			
+            			// if we don't have success...
+            		} else if(success == 'false'){
+            			// get the error message
+            			var usererror:String = httpService.lastResult.response.usererror;
+            			
+            			trace("[ERROR] in reponse..." + usererror);
+            			
+            			// if we have a user that already exists, show the password form
+            			if(usererror == 'user_exists'){
+            				// show the normal state with an error
+            				
+            				username.errorString = "The username you specified already exists! Use the password to log on onto that username";
+            			}
+            			
+            			if(usererror == 'wrong_password'){
+            				if(password){
+	            				password.text = "";
+	            				password.errorString = "The password you specified does not match the username...";
+	            				password.setFocus();
+	            			} else {
+	            				trace("[ERROR] cannot set login_password string");
+	            			}
+            			}
+            			
+            			if(usererror == 'no_password'){
+            				trace("[ERROR] no password given");
+            				if(password){
+            					password.setFocus();
+            				}
+            			}
+            			
+            			if(usererror == 'wrong_username'){
+            				if(username){
+            					username.errorString = "This username does not exist. Use 'register' to create an account";
+            					username.setFocus();
+            				}
+            			}
+            			
+            			currentState = '';
+            			
+            			//clearFormHandler();
+            			btnSave.visible = true;
+            		} else {
+            			trace("[ERROR] in dataformat - no status node");
+            		}
+            		
+	            }  
+            }
+            
+            private function onLogoutClick():void{
+            	trace("we want to log out!");
+            	// call the logout() function
+            	logout();
+            	
+            	
+            }
+            
+            // gets called when clicked
+            private function toLoggedInState():void{
+            	trace('setting state to logged in state!');
+            	btnSave.visible = true;
+            	btnSave.enabled = true;
+            	formIsValid = true;
+            	//t.stop();
+            	currentState = 'loggedin';
+            	designname.text = "";
+            	designname.errorString = "";
+            	
+            	dispatchEvent(new Event("saved",true));
+            	
+            	
+            }
+            
+            // gets called when clicked cancel
+            private function cancelPanel():void	{
+            	
+            	if(currentState != "loggedin")	{
+            		currentState = "";
+            	}
+            	dispatchEvent(new Event("close",true));
+            }
+            
+            public function logout():void {
+            	loggedIn = false;
+            	userId = -1;
+            	currentState = "";
+            	btnSave.visible = true;
+            	clearFormHandler();
+            }
+        ]]>
+    </mx:Script>
+    
+    <!-- form validation script -->
+    <mx:Script>
+        <![CDATA[
+            import mx.validators.Validator;
+            import mx.events.ValidationResultEvent;
+            import mx.controls.Alert;
+  
+            [Bindable]
+            public var formIsValid:Boolean = false;
+
+            [Bindable]
+            public var formIsEmpty:Boolean = true;
+    
+            // Holds a reference to the currently focussed 
+            // control on the form.
+            private var focussedFormControl:DisplayObject;
+                                  
+            // Validate the form
+            private function validateForm(event:Event):void 
+            {   
+
+				trace("doing da validation...");     
+                // Save a reference to the currently focussed form control
+                // so that the isValid() helper method can notify only
+                // the currently focussed form control and not affect
+                // any of the other form controls.
+                focussedFormControl = event.target as DisplayObject;    
+
+                // Mark the form as valid to start with                
+                formIsValid = true;            
+
+                // Check if form is empty
+                formIsEmpty = (username.text == "" && designname.text == ""); 
+
+                // Run each validator in turn, using the isValid() 
+                // helper method and update the value of formIsValid
+                // accordingly.
+                
+                validate(form_designname_valid);
+                
+                if(!formIsValid) trace("validation failed on: designname");
+                validate(form_username_valid); 
+                if(!formIsValid) trace("validation failed on: username");               
+                validate(form_email_valid);
+                if(!formIsValid) trace("validation failed on: email");
+                validate(form_password_valid);
+                if(!formIsValid) trace("validation failed on: password");
+                
+                if(confirm_password && currentState == 'register' && confirm_password.text != password.text){
+                	trace("the confirm password is not right!");
+                	formIsValid = false;
+                }
+                
+                
+            }
+     
+             // Helper method. Performs validation on a passed Validator instance.
+             // Validator is the base class of all Flex validation classes so 
+             // you can pass any validation class to this method.  
+             private function validate(validator:Validator):Boolean
+             {                
+             	
+             	// if we can't find the form element we need, don't bother
+             	if(!validator.source) return true;
+             	
+             	
+             	
+                // Get a reference to the component that is the
+                // source of the validator.
+                 var validatorSource:DisplayObject = validator.source as DisplayObject;
+                 
+                
+                
+                // Suppress events if the current control being validated is not
+                // the currently focussed control on the form. This stops the user
+                // from receiving visual validation cues on other form controls.
+                var suppressEvents:Boolean = (validatorSource != focussedFormControl);
+                
+                // Carry out validation. Returns a ValidationResultEvent.
+                // Passing null for the first parameter makes the validator 
+                // use the property defined in the property tag of the
+                // <mx:Validator> tag.
+                var event:ValidationResultEvent = validator.validate(null, suppressEvents); 
+                                
+                // Check if validation passed and return a boolean value accordingly
+                 var currentControlIsValid:Boolean = (event.type == ValidationResultEvent.VALID);
+                 
+                 // Update the formIsValid flag
+                 formIsValid = formIsValid && currentControlIsValid;
+                 
+                 return currentControlIsValid;
+              }
+              
+              // Event handler: Gets called when all child components
+              // have been created.
+              private function creationCompleteHandler():void
+              {
+                // Set the focus on the first field so 
+                // user does not have to mouse over to it.
+                // Note that the user still has to click on the 
+                // Flex application to give it focus. This is 
+                // a currently limitation in Flex.
+                  //resetFocus(); 
+              }
+            
+            // Submit form if everything is valid. 
+            private function submitForm():void 
+            {
+                Alert.show("Form Submitted!"); 
+            }
+            
+            // Clear the form and reset validation
+            private function clearFormHandler():void
+            {
+                // Clear all input fields
+                username.text = "";
+                designname.text = "";
+                if(email) email.text = "";
+                password.text = "";
+                
+                // Clear validation error messages
+                username.errorString = "";
+                designname.errorString = "";
+                if(email) email.errorString = "";
+                password.errorString = "";
+                
+                // Flag that the form is now clear
+                formIsEmpty = true;
+                
+                // Set the focus on the first field so 
+                // user does not have to mouse over to it.
+                resetFocus();               
+            }
+            
+            // Helper method. Sets the focus on the first field so 
+            // user does not have to mouse over to it.
+            private function resetFocus():void
+            {
+                focusManager.setFocus(username);
+            }
+        ]]>
+    </mx:Script>
+    
+    <!-- these will help us with validating form input -->
+    
+    <mx:EmailValidator  id="form_email_valid" required="false" source="{email}" property="text"/>
+    <mx:StringValidator id="form_username_valid" 
+    	required="true" source="{username}" 
+    	property="text" 
+    	minLength="3" 
+    	maxLength="100"
+    	requiredFieldError="We need a valid user name to log you in"/>
+    <mx:StringValidator 
+    	id="form_designname_valid" 
+    	required="true" 
+    	source="{designname}" 
+    	property="text" 
+    	minLength="0" 
+    	maxLength="100"
+    	requiredFieldError="We need a design name to save"/>
+    <mx:StringValidator 
+    	id="form_password_valid" 
+    	requiredFieldError="We need your password to log you in"
+    	required="true" 
+    	source="{password}" 
+    	property="text" 
+    	minLength="3" 
+    	maxLength="30"/>
+   
+    
+    <mx:HTTPService 
+    	id="httpService" 
+    	url="{baseUrl + 'save.php'}" 
+    	method="POST" 
+    	useProxy="false" 
+    	showBusyCursor="true"
+    	 result="onSaved(event)"
+    	>
+    	
+    </mx:HTTPService>
+	
+
+	
+	<mx:Form 
+		top="10" 
+		right="10" 
+		paddingRight="0" 
+		paddingLeft="0" 
+		paddingBottom="0" 
+		id="frmBasic" 
+		left="10" 
+		horizontalScrollPolicy="off"
+		verticalScrollPolicy="off"
+		>
+		<mx:FormItem label="my design is titled" id="frmDesignName">
+			<mx:TextInput id="designname" change="validateForm(event)"/>
+		</mx:FormItem>
+		<mx:FormItem label="" id="frmSendEmail">
+			<mx:CheckBox width="100%" id="sendEmail" label="send it to me"/>
+		</mx:FormItem>
+		<mx:FormItem>
+			<mx:Spacer height="15"/>
+		</mx:FormItem>
+		<mx:FormItem label="my name" required="true" id="frmUserName">
+			<mx:TextInput id="username" change="validateForm(event)"/>
+		</mx:FormItem>
+		<mx:FormItem label="my password" required="true" id="frmPassword">
+		    <mx:TextInput change="validateForm(event)" displayAsPassword="true" id="password"/>
+		</mx:FormItem>
+		
+		
+		
+	</mx:Form>
+	
+	
+	<mx:HBox id="control_bar" bottom="0" left="0" right="0" 
+			 paddingTop="10" paddingRight="10" paddingBottom="10" paddingLeft="10">
+		<mx:Button id="btnSave" label="Login and Save" height="40"
+		click="processSave();" width="125" enabled="{formIsValid}"/>
+		<mx:Button id="btnRegister" label="Register" height="40" width="93" click="{currentState='register'}"/>
+		<mx:Button id="btnCancel" label="Cancel" height="40" width="70" click="cancelPanel()"/>
+		
+	</mx:HBox>
+	
+	
+</win:FoldablePanel>

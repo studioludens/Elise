@@ -1,0 +1,5 @@
+/* CSS file */
+WindowedApplication{
+    borderSkin:                 ClassReference("RepeatedBackground");
+    background-image:             Embed("/media/images/bg_white_100square.gif");
+}

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Grid xmlns:mx="http://www.adobe.com/2006/mxml"
+	horizontalGap="15" verticalGap="15" horizontalAlign="center"
+	xmlns:spcom="com.spruit.components.*"
+	 creationComplete="onCreationComplete()"
+	  focusEnabled="false">
+	<mx:Script>
+		<![CDATA[
+		
+			import classes.CoasterPatterns;
+			
+			import mx.events.*;
+			
+			[Event(name="change", type="flash.events.Event")]
+			
+			//public var ksTool:KeyShapesTool;
+			
+			private var _selectedType:String = CoasterPatterns.types[0];
+			
+			[Bindable("valueCommit")]
+			public function get selectedType():String{
+				return _selectedType;
+			}
+			
+			public function set selectedType(value:String):void{		
+				setSelectedType(value);
+			}
+			
+			[Bindable("change")]
+			public function setSelectedType(value:String):void {
+				_selectedType = value;
+				
+				trace("setting the selected type");
+				
+				setSelectedIcon(_selectedType);
+				dispatchEvent(new Event(Event.CHANGE));
+				dispatchEvent(new FlexEvent(FlexEvent.VALUE_COMMIT));
+			}
+			
+			public function setSelectedIcon(pattern:String):void	{
+				
+				pattern1.selected = (pattern1.shapeType == selectedType ? true : false);
+				pattern2.selected = (pattern2.shapeType == selectedType ? true : false);
+				pattern3.selected = (pattern3.shapeType == selectedType ? true : false);
+				pattern4.selected = (pattern4.shapeType == selectedType ? true : false);
+				pattern5.selected = (pattern5.shapeType == selectedType ? true : false);
+				//pattern6.selected = (pattern6.shapeType == selectedType ? true : false);
+			}
+			
+			
+			public function onCreationComplete():void {
+				pattern1.selected = true;
+			}
+			public function onMouseClick(e:MouseEvent):void{
+				trace("clicked one of the previews" + e.currentTarget.shapeType);
+				
+				//e.currentTarget.selected = !e.currentTarget.selected;
+				
+				
+				setSelectedType(e.currentTarget.shapeType);
+				//if(ksTool) ksTool.waveType = _selectedType;
+				
+				
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:GridRow>
+		<mx:GridItem>
+			<spcom:ShapeButton 
+				id="pattern1" 
+				shapeType="{'_4_AAAA_Annyy'}"
+				click="onMouseClick(event)"
+				/>
+		</mx:GridItem>
+		<mx:GridItem>
+			<spcom:ShapeButton 
+				id="pattern2" 
+				shapeType="{'_6_AAAAAA_Annyy'}"
+				click="onMouseClick(event)"
+				/>
+		</mx:GridItem>
+	</mx:GridRow>
+	<mx:GridRow>
+		<mx:GridItem>
+			<spcom:ShapeButton 
+				id="pattern3" 
+				shapeType="{'_4_ABAB_Annyy_Bnyyn'}"
+				 click="onMouseClick(event)"
+				/>
+		</mx:GridItem>
+	
+		<mx:GridItem>
+			<spcom:ShapeButton 
+				id="pattern4" 
+				shapeType="{'_6_ABABAB_Annyn_Bnyyy'}"
+				 click="onMouseClick(event)"
+				/>
+		</mx:GridItem>
+	</mx:GridRow>
+	<mx:GridRow>
+		<mx:GridItem>
+			<spcom:ShapeButton 
+				id="pattern5" 
+				shapeType="{'_4_ABAB_Annyn_Bnyyy'}"
+				click="onMouseClick(event)"
+				/>
+		</mx:GridItem>
+		
+	</mx:GridRow>
+							
+</mx:Grid>

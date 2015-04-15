@@ -1,0 +1,28 @@
+<menubar>
+		
+		<menu label="File">
+			<menuitem label="New" command="new" key="n"/>
+			<menuitem label="Open..." command="open" key="o"/>
+			<menuitem type="separator"/>
+			<menuitem label="Save" command="save" key="s"/>
+			<menuitem label="Save As..." command="saveAs" key="S"/>
+			<menuitem label="Save As SVG..." command="saveAsSVG"/>
+			<menuitem type="separator"/>
+			<menuitem label="Quit Elise" command="quit" key="q"/>
+		</menu>
+		<menu label="Edit">
+			<menuitem label="Undo" command="cut" key="z"/>
+			<menuitem label="Redo" command="copy" key="y"/>
+			<menuitem type="separator"/>
+			<menuitem label="Cut" command="cut" key="x"/>
+			<menuitem label="Copy" command="copy" key="c"/>
+			<menuitem label="Paste" command="paste" key="v"/>
+			<menuitem label="Select all" command="selectAll" key="a"/>
+			<menuitem label="Clear" command="clear"/>
+		</menu>
+		<menu label="Help">
+			<menuitem label="Instructions" command="instruct"/>
+			<menuitem type="separator"/>
+			<menuitem label="About" command="about"/>
+		</menu>
+	</menubar>

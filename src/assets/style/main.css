@@ -1,0 +1,83 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace mx "library://ns.adobe.com/flex/mx";
+
+global {themeColor: #FFFFFF;}
+
+.headerText {
+	font-size: 45;
+	font-family: "Fashionista";
+	
+}
+
+mx|Panel {
+   borderColor: #bbbbbb;
+   borderAlpha: 1;
+   borderThicknessLeft: 1;
+   borderThicknessTop: 0;
+   borderThicknessBottom: 0;
+   borderThicknessRight: 1;
+   roundedBottomCorners: true;
+   cornerRadius: 9;
+   headerHeight: 22;
+   backgroundAlpha: 0.7;
+   highlightAlphas: 0.56, 0.19;
+   backgroundColor: #dddddd;
+   dropShadowEnabled: true;
+   shadowDistance: 1;
+   dropShadowColor: #666666;
+   titleStyleName: "mypanelTitle";
+}
+	
+	.mypanelTitle {
+	   letterSpacing: 0.5;
+	   color: #333333;
+	   fontFamily: Arial;
+	   fontSize: 11;
+	   fontWeight: bold;
+	}
+
+mx|Label {
+		color: #333333;
+		fontFamily: Arial;
+	   	fontSize: 11;
+	}
+	
+mx|TextInput {
+		fontFamily: Arial;
+	   color: #222222;
+	   fontSize: 13;
+	   fontWeight: normal;
+	   paddingLeft: 1;
+	   paddingRight: 1;
+	   leading: 1;
+	   textIndent: 0;
+	   letterSpacing: 0.5;
+	   backgroundAlpha: 0.7;
+	   borderStyle: solid;
+	   cornerRadius: 4;
+	   dropShadowEnabled: false;
+	}
+	
+mx|TextArea {
+	   fontFamily: Arial;
+	   color: #222222;
+	   fontSize: 13;
+	   fontWeight: normal;
+	   paddingLeft: 1;
+	   paddingRight: 1;
+	   leading: 1;
+	   textIndent: 0;
+	   letterSpacing: 0.5;
+	   backgroundAlpha: 0.7;
+	   borderStyle: solid;
+	   cornerRadius: 4;
+	   dropShadowEnabled: false;
+	}
+
+@font-face {
+	src: url('assets/fonts/fashionista_FREE-version.ttf');
+	fontFamily: 'Fashionista';
+	embedAsCFF: true;
+	
+}

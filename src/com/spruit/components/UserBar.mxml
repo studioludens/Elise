@@ -1,0 +1,430 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" height="25"
+	xmlns:cl="classes.*" 
+	xmlns:com="com.spruit.components.*"
+	 horizontalScrollPolicy="off"
+	  verticalScrollPolicy="off"
+	  initialize="init()"
+	   clipContent="false"
+	  >
+	<mx:states>
+		<mx:State name="loggedin">
+			<mx:SetProperty target="{save}" name="enabled" value="true"/>
+			<mx:SetProperty target="{save}" name="toolTip" value="save your design"/>
+			<mx:RemoveChild target="{signup}"/>
+			<mx:SetProperty target="{login}" name="label" value="logout"/>
+			<mx:SetProperty target="{designer_at_work}" name="text" value="designer at work: Alex"/>
+		</mx:State>
+		<mx:State name="login"/>
+	</mx:states>
+	
+	<mx:String id="baseUrl">http://localhost/keyshapes/</mx:String>
+	<mx:HTTPService 
+    	id="httpService" 
+    	url="{baseUrl + 'save.php'}" 
+    	method="POST" 
+    	useProxy="false" 
+    	showBusyCursor="true"
+    	 result="onServiceResult(event)"
+    	>
+    	
+    </mx:HTTPService>
+	
+	
+	<mx:Script>
+		<![CDATA[
+			import mx.utils.Base64Encoder;
+			import mx.rpc.events.ResultEvent;
+			
+			import com.spruit.events.UserSaveEvent;
+			import com.spruit.events.UserRegisterEvent;
+			import com.spruit.events.UserLoginEvent;
+		
+			import com.spruit.managers.*;
+			import com.spruit.data.*;
+			
+			import com.gsolo.encryption.MD5;
+			
+			
+			private var um:UserManager;
+			
+			public function init():void {
+				um = UserManager.getInstance();
+			}
+			
+			public function showLoginPanel():void {
+				trace("UserBar: showing login panel");
+				login_screen.visible = true;
+				login_screen.enabled = true;
+				login_screen.resetFocus();
+				
+				hideRegisterPanel();
+				
+				
+			}
+			
+			public function showSavePanel():void {
+				trace("UserBar: showing save panel");
+				save_screen.visible = true;
+				save_screen.enabled = true;
+				save_screen.resetFocus();
+				
+			}
+			
+			public function showRegisterPanel():void {
+				trace("UserBar: showing register panel");
+				register_screen.visible = true;
+				register_screen.enabled = true;
+				register_screen.resetFocus();
+				
+				hideLoginPanel();
+			}
+			
+			/* hiding functions */
+			public function hideLoginPanel():void {
+				trace("UserBar: hiding login panel");
+				login_screen.visible = false;
+				login_screen.enabled = false;
+				
+			}
+			
+			public function hideSavePanel():void {
+				trace("UserBar: hiding save panel");
+				save_screen.visible = false;
+				save_screen.enabled = false;
+				
+			}
+			
+			public function hideRegisterPanel():void {
+				trace("UserBar: hiding register panel");
+				register_screen.visible = false;
+				register_screen.enabled = false;
+			}
+			
+			public function logout():void {
+				currentState = '';
+				
+				// reset the session
+				um.reset();
+				login_screen.reset();
+				register_screen.reset();
+				save_screen.reset();
+				
+				message_screen.flashMessage("You have been logged out.",3000);
+			}
+			
+			/**
+				this function gets called when the save is succesful
+			**/
+			/*
+			private function onSaved(e:Event):void	{
+				designer_at_work.text = "designer at work: " + um.userName;
+				message_screen.flashMessage("Your design has been saved!",3000);
+				trace("UserBar: onSaved called");
+			}*/
+			
+			private function sendDataRequest(request:DataRequest):void {
+				trace("UserBar: sendDataRequest called");
+				
+				// make sure the request is complete
+				var send_data:Object = request.data;
+				
+				if(request.type == DataRequest.LOGIN){
+					// we have almost enough data to send
+					trace("UserBar: [login] sendDataRequest called");
+				}
+				
+				if(request.type == DataRequest.REGISTER){
+					// we have almost enough data to send
+					trace("UserBar: [register] sendDataRequest called");
+				}
+				
+				if(request.type == DataRequest.SAVE){
+					
+					trace("UserBar: [save] sendDataRequest called");
+					// we need the username and password too to be allowed to save on the server
+					send_data.userName = um.userName;
+					send_data.password = um.userPassword;
+					
+					// set the object type we are dealing with
+					send_data.type = DataRequest.SHAPETYPE_COASTER;
+					
+					// make sure we have the right image and shape data
+					// get them from the appropriate objects
+					
+					var imageDataEnc:Base64Encoder = new Base64Encoder();
+	                imageDataEnc.encodeBytes(parentApplication.getPNGData());
+	                	
+                	var encImage:String = imageDataEnc.flush();
+                	
+					send_data.imageData = encImage;
+					send_data.data = parentApplication.createCoasterData();
+					
+				}
+				
+				// set the required action you want the server to take
+				send_data.action = request.type;
+				
+				// and lastly, encrypt the password so nobody can see it
+				if(send_data.password) send_data.password = MD5.hex_md5(send_data.password);
+				
+				trace("send_data.password: " + send_data.password);
+				trace("send_data.username: " + send_data.userName);
+				
+				
+				// send the data!
+				httpService.send(send_data);
+				
+			}
+			
+		
+			/**
+			 * onServiceResult(): gets called when we have received a result from the HTTPService
+			 * 
+			 */
+			private function onServiceResult(e:ResultEvent):void {
+				if(httpService.lastResult && httpService.lastResult.response){
+            		
+            		// everything went well, we have a response from the server
+            		
+            		
+            		
+            		var response:XML = XML(httpService.lastResult.response);
+            		
+            		
+            		// now see if we have success
+            		var success:String = httpService.lastResult.response.success;
+            		
+            		trace("success=" + success);
+            		
+            		if(success == 'true'){
+            			trace("we  have success in receiving the data packet!");
+            			// set the message for the user
+            			var message:String = httpService.lastResult.response.message;
+            			var newuser:String = httpService.lastResult.response.newuser;
+            			var logged_in:String = httpService.lastResult.response.user.status;
+            			var user_id:String = httpService.lastResult.response.user.userid;
+            			var action:String = httpService.lastResult.response.action;
+            			
+            			trace("action=" + action);
+            			
+            			// save userid in session for later use
+            			
+            			// save username in session for later use
+            			
+            			um.userId = Number(user_id);
+            			um.loggedIn = true;
+            			
+            			trace("saved in session userId=" + um.userId);
+            			
+            			currentState = 'loggedin';
+            			
+            			// communicate the designer's name 
+            			designer_at_work.text = "designer at work: " + um.userName;
+            			
+            			// confirm the login to the user with a convenient message
+            			// the user has saved a design
+            			if(action == 'save') message_screen.flashMessage(message,3000);
+            			if(action == 'login') message_screen.flashMessage("You have been logged in!",3000);
+            			if(action == 'register') message_screen.flashMessage("You are now logged in and ready to save your designs.",3000);
+            			
+            			
+            			hideLoginPanel();
+            			hideSavePanel();
+            			hideRegisterPanel();
+            			
+            			
+            			// if we don't have success...
+            		} else if(success == 'false'){
+            			// get the error message
+            			var usererror:String = httpService.lastResult.response.usererror;
+            			var action:String = httpService.lastResult.response.action;
+            			
+            			trace("[ERROR] in reponse..." + usererror);
+            			
+            			// if we have a user that already exists, show the password form
+            			if(usererror == 'user_exists'){
+            				// make sure the username field is selected in the appropriate place
+            				// to show the error
+            				if(action == DataRequest.REGISTER){
+            					register_screen.username.errorString = "The username you specified already exists! Please use a different username.";
+            					register_screen.username.setFocus();
+            				} else {
+            					throw new Error("the user_exists error can only be here when we are Registering");
+            				}
+            				
+            			}
+            			
+            			if(usererror == 'wrong_password'){
+            				// make sure the password field is selected in the appropriate place
+            				// to show the error
+            				
+            				if(action == DataRequest.LOGIN){
+            					login_screen.password.text = '';
+            					login_screen.password.errorString = "The password you specified does not match the username...";
+            					login_screen.password.setFocus();
+            				} else {
+            					throw new Error("the wrong_password error can only be here when we are Logging in");
+            				}
+            				
+            			}
+            			
+            			if(usererror == 'no_password'){
+            				// make sure the password field is selected in the appropriate place
+            				// to show the error
+            				trace("[ERROR] no password given");
+            				/*if(password){
+            					password.setFocus();
+            				}*/
+            			}
+            			
+            			if(usererror == 'wrong_username'){
+            				// make sure the username field is selected in the appropriate place
+            				// to show the error
+            				
+            				if(action == DataRequest.LOGIN){
+            					
+            					login_screen.username.errorString = "This username does not exist. Use the 'sign up' button to create an account";
+            					login_screen.username.setFocus();
+            				} else {
+            					throw new Error("the wrong_password error can only be here when we are Logging in");
+            				}
+            				
+            			}
+            			
+            			
+            		} else {
+            			trace("[ERROR] in dataformat - no status node");
+            		}
+            		
+	            }  
+			}
+			
+			/* event handlers */
+			private function onSaveButtonClick():void {
+				showSavePanel();
+			}
+			
+			private function onLoginButtonClick():void {
+				
+				// test
+				if(currentState == "loggedin"){
+					logout();
+				} else {
+					showLoginPanel();
+				}
+				
+				
+				
+				
+			}
+			
+			private function onRegisterButtonClick():void {
+				showRegisterPanel();
+			}
+			
+			// for the three different boxes
+			
+			private function onUserLogin(e:UserLoginEvent):void {
+				trace("UserBar: [userLoginEvent] username=" + e.username + ", password=" + e.password); 
+				
+				var data:Object = { userName: e.username, 
+									password: e.password
+									};
+				var dr:DataRequest = new DataRequest(DataRequest.LOGIN, data);
+				
+				// update the session for now
+				um.userName = e.username;
+				um.userPassword = e.password;
+				
+				
+				// send the request to the server
+				sendDataRequest(dr);
+			}
+			
+			private function onUserSave(e:UserSaveEvent):void {
+				trace("UserBar: [userSaveEvent] designName=" + e.designName + ", private=" + e.isPrivate); 
+				
+				var data:Object = { designName: e.designName,
+									data: null,
+									imageData: null,
+									sendEmail: (e.sendDesign ? "1" : "0"),
+									isPrivate: (e.isPrivate ? "1" : "0")
+									};
+				var dr:DataRequest = new DataRequest(DataRequest.SAVE, data);
+				
+				// send the request to the server
+				sendDataRequest(dr);
+			}
+			
+			private function onUserRegister(e:UserRegisterEvent):void {
+				trace("UserBar: [userRegisterEvent] username=" + e.username + ", password=" + e.password + ", email=" + e.email); 
+				
+				var data:Object = { userName: e.username, 
+									password: e.password,
+									email: e.email,
+									sendUpdates: (e.sendUpdates ? "1" : "0")
+									};
+				var dr:DataRequest = new DataRequest(DataRequest.REGISTER, data);
+				
+				// update the session for now
+				um.userName = e.username;
+				um.userPassword = e.password;
+				
+				// send the request to the server
+				sendDataRequest(dr);
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:HBox 
+		left="0" bottom="0" 
+		right="0" top="0" 
+		horizontalGap="10">
+		
+		<cl:GlowButton 
+			id="login" 
+			label="login" 
+			width="90" 
+			height="25"
+			buttonMode="true"
+			icon="@Embed(source='../../../media/images/key.png')"
+			horizontalGap="5"
+			click="onLoginButtonClick()"
+			toolTip="If you have a ludens:id, you can login and save your designs"
+			
+		/>
+		<cl:GlowButton 
+			id="signup" 
+			label="sign up" 
+			width="100" 
+			height="25"
+			buttonMode="true"
+			icon="@Embed(source='../../../media/images/pencil.png')"
+			horizontalGap="5"
+			click="onRegisterButtonClick()"
+			toolTip="Get a free ludens:id to save your creations"
+		
+		/>
+		<mx:Spacer width="10"/>
+		<cl:GlowButton 
+			id="save" 
+			label="save" 
+			width="100" 
+			height="25"
+			buttonMode="true"
+			 toolTip="You can save your design only when you have logged in or created a ludens:id."
+			
+			icon="@Embed(source='../../../media/images/save_icon_small.png')"
+			horizontalGap="5"
+			 click="onSaveButtonClick()"
+		 enabled="false"/>
+		 
+		 <mx:Text id="designer_at_work" text="" styleName="designerAtWorkStyle"/>
+	</mx:HBox>
+	
+	<com:UserLoginScreen id="login_screen" visible="false" enabled="false" y="-130" x="-5" userLogin="onUserLogin(event)"/>
+	<com:UserRegisterScreen id="register_screen" visible="false" enabled="false" y="-360" x="95" userRegister="onUserRegister(event)"/>
+	<com:UserSaveScreen id="save_screen" visible="false" enabled="false" y="-160" x="115" userSave="onUserSave(event)"/>
+	<com:UserMessageScreen id="message_screen" visible="false" enabled="false" x="-5" y="-80"/>
+</mx:Canvas>

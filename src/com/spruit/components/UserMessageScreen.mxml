@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="336" height="74">
+
+	<mx:Parallel id="messageShowEffect" target="{this}">
+		<mx:Fade alphaFrom="0" alphaTo="1" duration="250" />
+		<mx:Blur blurXFrom="10" blurYFrom="10" blurXTo="0"
+		blurYTo="0" duration="250" />
+	</mx:Parallel>
+	<mx:Parallel id="messageHideEffect" target="{this}">
+		<mx:Fade alphaFrom="1" alphaTo="0" duration="850" />
+		<mx:Blur blurXFrom="0" blurYFrom="0" blurXTo="10"
+		blurYTo="10" duration="850" />
+	</mx:Parallel>
+	<mx:Script>
+		<![CDATA[
+			
+			private var t:Timer = new Timer(1000);
+			
+			// this function shows a message for a number of ms and then fades away
+			public function flashMessage(message:String, duration:Number, error:Boolean = false):void {
+				message_text.text = message;
+				
+				
+				this.enabled = true;
+				this.visible = true;
+				
+				messageShowEffect.play();
+				
+				t.delay = duration;
+				t.addEventListener(TimerEvent.TIMER, onTimerComplete);
+				t.start();
+				
+			}
+			
+			private function onTimerComplete(e:TimerEvent):void {
+				// hide the screen
+				this.enabled = false;
+				//this.visible = false;
+				t.stop();
+				
+				messageHideEffect.play();
+			}
+		]]>
+	</mx:Script>
+	
+	<mx:SWFLoader 
+		x="0" y="0" 
+		width="336" height="74" 
+		source="media/fla resources/MessageBox.swf" 
+		autoLoad="true"/>
+	<mx:Image 
+		x="23" y="27" 
+		width="16" height="16" 
+		source="media/images/tick.png"/>
+	<mx:Label 
+		x="56" y="25" 
+		id="message_text"
+		text="Your design has been saved." 
+		width="270" height="25" 
+		fontFamily="Franklin Condensed" 
+		fontSize="15"/>
+	
+</mx:Canvas>

@@ -1,0 +1,18 @@
+Elise Project
+=============
+
+Elise is an Actionscript implementation of simple Lindemayer systems. It is meant to be an easy way for people to explore L-systems. It provides basic functionality for exporting 
+
+
+
+
+
+Requirements
+------------
+
+The project in this repository builds with Flash Builder 4.6 and needs Adobe AIR 3.1 to run.
+
+
+Versions
+--------
+

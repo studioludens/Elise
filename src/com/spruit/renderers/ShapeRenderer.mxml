@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vis:KeyShapePreviewTile
+	 xmlns:vis="com.spruit.renderers.*" 
+	 xmlns:mx="http://www.adobe.com/2006/mxml" 
+	 
+	 width="210"
+	 height="282"
+	initialize="init()"
+	 xmlns:filters="flash.filters.*">
+	 
+	 <vis:states>
+		
+		<mx:State name="selected" >
+			<!--
+			<mx:SetProperty name="filters">
+						<mx:value>
+							<mx:Array>
+								<f:GlowFilter id="glow" color="#BBBBBB"/>
+							</mx:Array>
+						</mx:value>
+				</mx:SetProperty>
+			-->
+		</mx:State>
+		
+	</vis:states>
+	
+	<vis:transitions>
+		<mx:Transition fromState="" toState="selected" >
+			<mx:Sequence target="{image}" >
+				<mx:Glow color="#BBBBBB" duration="150" alphaFrom="0" alphaTo="1"/>
+				
+			</mx:Sequence>
+			
+		</mx:Transition>
+		
+		<mx:Transition fromState="selected" toState="" >
+			<mx:Sequence target="{image}" >
+				<mx:Glow color="#BBBBBB" duration="150" alphaFrom="1" alphaTo="0"/>
+				
+			</mx:Sequence>
+			
+		</mx:Transition>
+		
+	</vis:transitions>
+
+	
+	<mx:Script>
+		<![CDATA[
+		
+			import mx.events.ListEvent;
+			
+			private var _origWidth:Number;
+			private var _origHeight:Number;
+			
+			private function init():void {
+				image.addEventListener(MouseEvent.MOUSE_OVER, onMouseOver);
+				image.addEventListener(MouseEvent.MOUSE_OUT, onMouseOut);
+				image.addEventListener(MouseEvent.CLICK, onMouseClick);
+				_origHeight = height;
+				_origWidth = width;
+			}
+			
+			/* mouse hover effect */
+			private function onMouseOver(e:MouseEvent):void {
+				// doing a mouse over!
+				//trace("doing a mouse over! on Design - " + this.designId);
+				if(currentState != 'selected')
+					currentState = 'selected';
+				
+			}
+			/* mouse hover effect */
+			private function onMouseOut(e:MouseEvent):void {
+				
+				if(currentState != ''){
+					
+					currentState = '';
+				}
+			}
+			
+			private function onMouseClick(e:MouseEvent):void{
+				trace("clicked on Design - " + this.designId);
+				var event:ListEvent = new ListEvent("itemClick");
+				event.itemRenderer = this;
+				
+				owner.dispatchEvent(event);
+				
+			}
+			
+			
+			
+		]]>
+	</mx:Script>
+	
+	<filters:DropShadowFilter id="shadowFilter" distance="3" blurX="2" blurY="2"/>
+	<mx:Label 
+		text="{designName}" 
+		height="37" 
+		textAlign="center"
+		fontSize="20" 
+		color="#ffffff" 
+		width="134" 
+		y="10" 
+		horizontalCenter="0"
+		 filters="{[shadowFilter]}"/>
+	<mx:Label text="{userName}" height="37" textAlign="center" fontSize="15" color="#ffffff" width="130" y="60" horizontalCenter="0"/>
+	<mx:Label text="by" height="26" textAlign="center" fontSize="15" color="#ffffff" width="130" y="38" horizontalCenter="-17"/>
+</vis:KeyShapePreviewTile>

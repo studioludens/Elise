@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas 
+	xmlns:mx="http://www.adobe.com/2006/mxml"
+	xmlns:fl="flexlib.containers.*"
+	xmlns:vis="com.spruit.vis.*" 
+	xmlns:win="com.spruit.windows.*"
+	xmlns:adb="com.adobe.controls.*"
+	
+	width="802" 
+	height="716"
+	 creationComplete="onCreationComplete()">
+	<mx:states>
+		<mx:State name="preview">
+			<mx:SetEventHandler target="{this}" name="click" handler="closePreview()"/>
+			<!--<mx:SetProperty target="{shapeList}" name="enabled" value="false"/>-->
+			
+		</mx:State>
+	</mx:states>
+	
+	
+	<mx:transitions>
+		<mx:Transition fromState="" toState="preview">
+			<mx:Parallel targets="{[preview_shape, pagedList]}">
+				<mx:Fade target="{pagedList}" alphaFrom="1" alphaTo="0.1" duration="400"/>
+				<mx:Fade target="{scroller}" alphaFrom="1" alphaTo="0.1" duration="400"/>
+				<mx:Fade target="{preview_shape}" alphaFrom="0" alphaTo="1" duration="400"/>
+			</mx:Parallel>
+		</mx:Transition>
+		<mx:Transition fromState="preview" toState="">
+			<mx:Parallel targets="{[preview_shape, pagedList]}">
+				<mx:Fade target="{pagedList}" alphaFrom="0.1" alphaTo="1" duration="400"/>
+				<mx:Fade target="{scroller}" alphaFrom="0.1" alphaTo="1" duration="400"/>
+				<mx:Fade target="{preview_shape}" alphaFrom="1" alphaTo="0" duration="400"/>
+			</mx:Parallel>
+		</mx:Transition>
+		
+	</mx:transitions>
+	
+	
+	<mx:String id="baseUrl"></mx:String>
+	
+	<mx:Script>
+		<![CDATA[
+			import com.spruit.renderers.KeyShapePreviewTile;
+			import mx.events.ListEvent;
+			import mx.collections.ArrayCollection;
+		
+			import mx.rpc.events.ResultEvent;
+			
+			
+			
+			[Bindable] public var currentItem:Object = new Object();
+			
+			[Embed(source="../../../media/pagedListAssets.swf",symbol="NextArrow")]
+			private var nextArrow:Class;
+			
+			[Embed(source="../../../media/pagedListAssets.swf",symbol="PrevArrow")]
+			private var prevArrow:Class;
+			
+			private var previewCollection:ArrayCollection;
+
+			
+			public function onCreationComplete():void{
+				galleryService.send();
+			}
+			
+			public function loadPreview(item:Object):void {
+				trace("loading preview! - " + item.id);
+				
+				galleryItemService.send({type: "single_item", itemid: item.id});
+				
+				// set the state to preview
+				
+				currentItem.username = item.username;
+				currentItem.id = item.id;
+				currentItem.name = item.name;
+				
+				// add an onclick listener
+				
+			}
+			
+			public function closePreview():void{
+				trace("returning to base state");
+				preview_shape.enabled = false;
+				currentState = '';
+			}
+			
+			private function onGalleryClick(e:ListEvent):void{
+				
+				trace("on the outside Clicked! - id = " + e.itemRenderer.data.id);
+				
+				var item:Object = new Object();
+				item.username = e.itemRenderer.data.username;
+				item.id = e.itemRenderer.data.id;
+				item.name = e.itemRenderer.data.name;
+				
+				loadPreview(item);
+				
+			}
+			
+			
+			
+			// fire if we have a result from the galleryservice
+			
+			private function onGalleryServiceResult(e:ResultEvent):void{
+				
+				
+				trace("we have received a result from the galleryService!");
+				trace("galleryService result: " + galleryService.lastResult.response.shape);
+				previewCollection = ArrayCollection(galleryService.lastResult.response.shape);
+				
+				// insert the values for the baseUrl here -- do this on the server?
+				for(var i:int = 0; i < previewCollection.length; i++){
+					previewCollection[i].baseUrl = baseUrl;
+				}
+				
+				pagedList.dataProvider = previewCollection;
+				
+				
+				
+				//pagedList.baseUrl = baseUrl;
+			}
+			
+			// this function is fired when we have recieved the results for our specific item			
+			private function onGalleryItemServiceResult(e:ResultEvent):void{
+				
+				
+				trace("we have received a result from the galleryService!");
+				
+				var data:String = galleryItemService.lastResult.response.shape.data;
+				//trace("data:" + data);
+				
+				// load the data, give an error if failed to load
+				if(data && !preview_shape.loadData(data)){
+					trace("[ERROR] loading preview data!");
+				} else {
+					trace("data for preview succesfully loaded");
+					preview_shape.visible = true;
+					preview_shape.enabled = true;
+					
+					currentState = "preview";
+				}
+			}
+			
+			public function set reload(value:Boolean):void{
+				if(value) galleryService.send();
+			}
+			public function get reload():Boolean {
+				return false;
+			}
+			
+		]]>
+	</mx:Script>
+	
+	<mx:HTTPService 
+		id="galleryService" 
+		url="{baseUrl + 'get.php'}"
+	 	method="POST" 
+	  	useProxy="false"
+	  	  result="onGalleryServiceResult(event)"
+	 />
+	 
+	 <mx:HTTPService 
+		id="galleryItemService" 
+		url="{baseUrl + 'get.php'}"
+	 	method="POST" 
+	  	useProxy="false"
+	  	  result="onGalleryItemServiceResult(event)"
+	 />
+	 
+	 <vis:KeyShapesTool 
+			id="preview_shape" 
+			y="27" 
+			width="1" 
+			height="1" 
+			horizontalCenter="-130" 
+			fancy="true"
+			distance="20"
+			pause="true"
+			visible="false"
+			 includeInLayout="false"
+			 buttonMode="true"/>
+	
+	<!--
+	<fl:DragScrollingCanvas 
+		id="shapeList"  
+		width="100%" 
+		height="375" 
+		verticalScrollPolicy="off" 
+		
+		 
+		 disabledOverlayAlpha="0" bottom="0">
+	<mx:HBox left="0" height="350" bottom="0" verticalScrollPolicy="off" horizontalScrollPolicy="off" id="hbox1">
+		<mx:Repeater id="shape_repeat" dataProvider="{galleryService.lastResult.response.shape}">
+			<win:ShapeRenderer 
+				userName="{shape_repeat.currentItem.username}" 
+				designName="{shape_repeat.currentItem.name}" 
+				imageName="{shape_repeat.currentItem.thumb}"
+				baseUrl="{baseUrl}"
+				click="loadPreview(event.currentTarget.getRepeaterItem())"
+				 fontFamily="Franklin"
+				/>
+		</mx:Repeater>	
+	</mx:HBox>
+	
+	</fl:DragScrollingCanvas>
+	-->
+	<adb:PagedList
+			id="pagedList"
+			
+			right="40"
+			left="40"
+			height="380"
+			bottom="0"
+			spacing="-30"
+			itemRenderer="com.spruit.renderers.ShapeRenderer"
+			currentPage="{scroller.currentPage}"
+			 itemClick="onGalleryClick(ListEvent(event))"
+			
+		/>
+	<mx:Button 
+		styleName="prevNext" 
+		click="{pagedList.currentPage--}" 
+		icon="{prevArrow}" 
+		bottom="200"
+		left="5" 
+		width="22" 
+		height="60"
+		 buttonMode="true" />
+	
+	<adb:PagedListAffordance 
+		id="scroller"
+		left="40" right="40" height="30" 
+		currentPage="{pagedList.currentPage}"
+		numberOfPages="{pagedList.totalPages}"
+		bottom="400"
+		 />
+	<mx:Button 
+		styleName="prevNext" 
+		click="{pagedList.currentPage++}" 
+		icon="{nextArrow}" 
+		bottom="200"  
+		right="5" 
+		width="22" 
+		height="60"
+		 buttonMode="true"
+		 />
+
+	
+		
+		<!--
+		<mx:Label y="388" id="preview_title" text="{currentItem.name}" fontFamily="Franklin" width="204" height="48" horizontalCenter="0" textAlign="center" fontSize="25" color="#ffffff"/>
+		<mx:Label y="424" id="preview_by" text="by" fontFamily="Franklin" width="204" height="48" horizontalCenter="0" textAlign="center" fontSize="20" color="#ffffff"/>
+		<mx:Label y="444" id="preview_name" text="{currentItem.username}" fontFamily="Franklin" width="204" height="48" horizontalCenter="0" textAlign="center" fontSize="20" color="#ffffff"/>
+	-->
+	
+	
+	
+	
+				
+</mx:Canvas>

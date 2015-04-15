@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:cl="classes.*" 
+	layout="absolute" width="400" height="300">
+	<mx:Grid x="10" y="10" width="90%" height="85%" horizontalGap="10" verticalGap="0">
+		<mx:GridRow width="100%" height="100%">
+			<mx:GridItem width="150" verticalAlign="middle">
+				<mx:Image source="@Embed(source='../../../media/images/using_the_control_points.png')"/>
+			</mx:GridItem>
+			<mx:GridItem width="100%" verticalAlign="middle">
+				<mx:VBox width="100%">
+					<mx:Text text="using the control points" 
+							 width="100%"
+							 fontSize="30"
+							 paddingBottom="-10"
+							 paddingLeft="0"	
+							 color="0x18a90d"									 									 
+							 />
+					<mx:Text text="moving the controls you can create both spiky and rounded shapes. Add more controls in a row to create a straighter edge" 
+							 width="100%"
+							 fontSize="20"
+							 />
+						</mx:VBox>						
+				</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow width="100%" height="100%">
+			<mx:GridItem width="150"  verticalAlign="middle">
+				<mx:Image source="@Embed(source='../../../media/images/think_coaster.png')"/>
+			</mx:GridItem>
+			<mx:GridItem width="100%" verticalAlign="middle">
+				<mx:VBox width="100%">
+						<mx:Text text="think 'coaster'" 
+								 width="100%"
+								 fontSize="30"
+								 paddingBottom="-10"
+								 paddingLeft="0"	
+								 color="0x18a90d"									 									 
+								 />
+					<mx:Text text="try to think what you want your coaster to be like. Do you want a wicked design or just a subtle twist. Look at the 3D preview to get an idea about what the coaster might look like in use"
+							 width="100%"
+							 fontSize="20"
+							 />
+				</mx:VBox>
+			</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow width="100%" height="100%">
+			<mx:GridItem width="150"  verticalAlign="middle">
+				<mx:Image source="@Embed(source='../../../media/images/crossing_edges2.png')"/>
+			</mx:GridItem>
+			<mx:GridItem width="100%" verticalAlign="middle">
+				<mx:VBox width="100%">
+					<mx:Text text="avoid crossing edges" 
+							 width="100%"
+							 fontSize="30"
+							 paddingBottom="-10"
+							 paddingLeft="0"	
+							 color="0xa90d0d"									 									 
+							 />
+					<mx:Text text="make sure that the edge of the coaster is not intersecting itself; this would result in loose parts" 
+							 width="100%"
+							 fontSize="20"
+							 />
+						</mx:VBox>						
+				</mx:GridItem>
+		</mx:GridRow>
+		<mx:GridRow width="100%" height="100%">
+			<mx:GridItem width="150"  verticalAlign="middle">
+				<mx:Image source="@Embed(source='../../../media/images/narrow_connections2.png')"/>
+			</mx:GridItem>
+			<mx:GridItem width="100%" verticalAlign="middle">
+				<mx:VBox width="100%">
+						<mx:Text text="avoid narrow sections" 
+								 width="100%"
+								 fontSize="30"
+								 paddingBottom="-10"
+								 paddingLeft="0"	
+								 color="0xa90d0d"									 									 
+								 />
+					<mx:Text text="Be especially aware of large chunks of coaster that connected to the center with narrow connections; these could break easily"
+							 width="100%"
+							 fontSize="20"
+							 />
+				</mx:VBox>
+			</mx:GridItem>
+		</mx:GridRow>
+	</mx:Grid>
+	<cl:GlowButton label="close" 
+		       right="10" 
+		       bottom="10"
+		       width="100"
+		       height="30"
+		       mouseDown="{this.parentApplication.showHideGuidelines()}"
+		       />
+</mx:Panel>

@@ -1,0 +1,613 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   
+					   xmlns:win="com.spruit.windows.*"
+					   xmlns:lcom="com.ludens.components.*"
+					   xmlns:local="com.ludens.LSystemsPro.*" 
+					   
+					   creationComplete="onCC()" xmlns:layout="com.ludens.zoompan.layout.*" 
+					   xmlns:components="com.ludens.elise.components.*" 
+					   xmlns:view="com.ludens.zoompan.view.*"
+					   >
+	
+	<s:menu>
+		<mx:FlexNativeMenu  id="nativeMenu" 
+							dataProvider="{applicationMenu}" 
+							labelField="@label" 
+							keyEquivalentField="@key" 
+							
+							keyEquivalentModifiersFunction="standardOSModifier" 
+							showRoot="false" 
+							
+							itemClick="nativeMenuCommand(event)"/>
+	</s:menu>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		
+		<fx:XML id="applicationMenu" format="e4x" source="assets/xml/applicationMenu.xml"/>
+		
+		<fx:String id="version">0.5.0</fx:String>
+		<!-- Menu components -->
+		
+	</fx:Declarations>
+		
+		<fx:Style source="assets/style/main.css"/>
+		<!--<fx:Style source="asssets/style/backgroundImage.css" />-->
+		<!--<mx:XML id="applicationMenu" format="e4x" source="./media/applicationMenu.xml"/>-->
+		
+	<fx:Script>
+		<![CDATA[
+			import mx.events.AIREvent;
+			import mx.events.FlexNativeMenuEvent;
+			import mx.controls.Alert;
+			import mx.managers.PopUpManager;
+			
+			import mx.events.FlexEvent;
+			import flash.events.InvokeEvent;
+			
+			/**
+			 * public variables
+			 */
+			
+			
+			public const DEFAULT_FILE_NAME:String = "Untitled.lsys";
+			
+			public var currentFileName:String = DEFAULT_FILE_NAME;
+			public var currentFile:File = File.documentsDirectory.resolvePath(currentFileName);
+			
+			public function onCC():void{
+				st.calculate();
+				
+				slider_ratio.value = .95;
+				slider_angle.value = 60;
+				//st.lineColor = int(cp_lineColor.value);
+				//input_commands.text = "F:F+F--F+F";
+				/*
+				input_commands.addEventListener(Event.CHANGE, onSystemChanged);
+				input_axiom.addEventListener(Event.CHANGE, onSystemChanged);
+				slider_angle.addEventListener(Event.CHANGE, onSystemChanged);
+				stepper_angle.addEventListener(Event.CHANGE, onSystemChanged);
+				slider_ratio.addEventListener(Event.CHANGE, onSystemChanged);
+				stepper_ratio.addEventListener(Event.CHANGE, onSystemChanged);
+				*/
+				//loadPersistence();
+				
+				// doesn't work?
+				st.resize();
+				
+				// this is for loading associated *.lsys files
+				//NativeApplication.nativeApplication.addEventListener(InvokeEvent.INVOKE, initializationHandler);
+				
+				
+				
+			}
+			
+			public function openHTMLWindow(url:String, windowBounds:Rectangle):void {
+				var options:NativeWindowInitOptions = new NativeWindowInitOptions();
+				options.systemChrome = NativeWindowSystemChrome.STANDARD;
+				options.minimizable = false;
+				options.maximizable = false;
+				options.resizable = true;
+				
+				
+				options.type = NativeWindowType.UTILITY;
+				
+				var newHTMLLoader:HTMLLoader = HTMLLoader.createRootWindow(true, options, true, windowBounds);
+				newHTMLLoader.load(new URLRequest(url));
+				// set it to front
+				
+			}
+			
+			
+			/**
+			 * initialize the native menu system
+			 * - fill with menu descriptors and add event handlers
+			 */
+			//Handle menu commands from the application, window, dock and system tray icon menus
+			/**
+			 
+			 * Return an array containing the key code of the standard
+			 * modifier key for either Mac or Windows
+			 */ 
+			
+			private function standardOSModifier(item:Object):Array{
+				var modifiers:Array = new Array();
+				if((Capabilities.os.indexOf("Windows") >= 0)){
+					modifiers.push(Keyboard.CONTROL);
+				} else if (Capabilities.os.indexOf("Mac OS") >= 0){
+					modifiers.push(Keyboard.COMMAND);
+				} 
+				return modifiers;
+			}
+			
+			private function nativeMenuCommand(menuEvent:FlexNativeMenuEvent):void{
+				var application:WindowedApplication = this;
+				if(!application.nativeWindow.active){
+					application.addEventListener(AIREvent.WINDOW_ACTIVATE, executeAsync);
+					application.activate();
+					
+					function executeAsync(event:Event):void{
+						application.removeEventListener(AIREvent.WINDOW_ACTIVATE, executeAsync);
+						
+						
+						doCommand(menuEvent.item.@command);	
+					}			
+				} else {
+					doCommand(menuEvent.item.@command);
+				}	
+			}
+			
+			//Execute the selected command
+			private function doCommand(command:String):void{
+				
+				switch(command){
+					/**
+					 * FILE MENU
+					 */
+					
+					case "new":
+						newLSysHandler();
+						break;
+					case "save":
+						saveLSysHandler();
+						break;
+					case "open":
+						loadLSysHandler();
+						break;
+					case "saveAs":
+						saveAsLSysHandler();
+						break;
+					case "saveAsSVG":
+						saveLSysSVGHandler();
+						break;
+					case "quit":
+					// should check if there is an unsaved file
+						this.nativeApplication.exit();
+						break;
+					
+					
+					/**
+					 * EDIT MENU
+					 */
+					case "undo":
+					/**
+					 * TODO: implement commands TextInput undo functions
+					 */
+					//this.nativeApplication.undo();
+					break;
+					case "redo":
+					/**
+					 * TODO: implement commands TextInput undo functions
+					 */
+					//this.nativeApplication.redo();
+					break;
+					
+					case "cut":
+					this.nativeApplication.cut();
+					break;
+					case "copy":
+					this.nativeApplication.copy();
+					break;
+					case "paste":
+					this.nativeApplication.paste();
+					break;
+					case "selectAll":
+					this.nativeApplication.selectAll();
+					break;
+					case "clear":
+					this.nativeApplication.clear();
+					break;
+					
+					/**
+					 * HELP MENU
+					 */
+					case "instruct":
+					// display instructions window
+					openHTMLWindow("./media/help.html", new Rectangle(200,250,300,600));
+					break;
+					case "about":
+					// display about box
+					openHTMLWindow("./media/readme.html", new Rectangle(100,130,850,600));
+					break;
+					
+					default:
+					
+					
+				}
+				
+			}
+			
+			
+			/**
+			 * this function is called when the application is opened with 
+			 * an lsys file. We load it in directly
+			 */
+			/*
+			private function initializationHandler(event:InvokeEvent):void {
+				
+				if(event.arguments[0] != null){
+					// assume we have a file, try to open it
+					var dir:File = event.currentDirectory;
+					
+					var newFile:File = dir.resolvePath(event.arguments[0]);
+					
+					fileLoadLSys( newFile );
+				}
+				
+				trace("Application opened with: "+event.arguments[0]); // file path
+			}*/
+			
+			
+			
+			// load the values from last time into the application
+			
+			public function loadPersistence():void {
+				
+				//trace("[loadPersistence] called");
+				/*
+				var so:SharedObject = SharedObject.getLocal("currentSystem");
+				if(so.data.commands){
+				input_commands.text = so.data.commands;
+				st.commands = so.data.commands;
+				}
+				if(so.data.axiom){
+				input_axiom.text = so.data.axiom;
+				st.axiom = so.data.axiom;
+				}
+				if(so.data.angle){
+				stepper_angle.value = so.data.angle;
+				st.angle = so.data.angle;
+				}
+				if(so.data.lineColor){
+				cp_lineColor.selectedColor = so.data.lineColor;
+				st.lineColor = so.data.lineColor;
+				}
+				
+				if(so.data.lineThickness){
+				stepper_lineThickness.value = so.data.lineThickness;
+				st.lineThickness = so.data.lineThickness;
+				}
+				
+				if(so.data.fileName){
+				currentFileName = so.data.fileName;
+				}
+				
+				if(so.data.file is File){
+				currentFile = so.data.file;
+				
+				}
+				
+				if(!so.data.runBefore){
+				// run for the first time, show the readme window
+				openHTMLWindow("./media/readme.html", new Rectangle(30,60,850,600));
+				}
+				
+				setWindowTitle();
+				*/
+			}
+			
+			public function savePersistence():void{
+				
+				//race("[savePersistence] called");
+				/*
+				var so:SharedObject = SharedObject.getLocal("currentSystem");
+				so.data.commands = new String(st.commands);
+				so.data.axiom = new String(st.axiom);
+				so.data.angle = new Number(st.angle);
+				so.data.ratio = new Number(st.ratio);
+				so.data.lineColor = new Number(st.lineColor);
+				so.data.lineThichness = new Number(st.lineThickness);
+				so.data.fileName = new String(currentFileName);
+				so.data.file = currentFile;
+				so.data.runBefore = true;
+				so.flush();
+				*/
+			}
+			/*
+			public function onSystemChanged(e:Event):void {
+				// removing now, storing the stuff
+				//trace("system changed " + e.target);
+				// load the stored values
+				
+				savePersistence();
+			}*/
+			
+			public function newLSysHandler():void {
+				
+				// reset L-system
+				
+				// update all the fields and the L-system
+				st.enabled = false;
+				slider_iterations.value 	= 1;
+				input_commands.text 		= "F:F+F--F+F";
+				input_axiom.text 			= "F";
+				stepper_angle.value 		= 45;
+				
+				stepper_ratio.value			= 0.9;
+				stepper_lineThickness.value = 1;
+				
+				st.enabled 					= true;
+				st.lineColor				= 0x0;
+				
+				currentFileName				= DEFAULT_FILE_NAME;
+				currentFile 				= File.documentsDirectory.resolvePath(currentFileName);
+				setWindowTitle();
+				
+			}
+			
+			
+			
+			
+			public function saveLSysHandler():void {
+				
+				// check if the current filename is not 
+				if(currentFileName == DEFAULT_FILE_NAME){
+					// do the save as routine, but with a pre-generated filename
+					var fileChooser:File = File.documentsDirectory.resolvePath("lsys-" + currentDateString() + ".lsys");
+					
+					fileChooser.browseForSave("Save As");
+					fileChooser.addEventListener(Event.SELECT, fileSaveLSys);
+				} else {
+					// save directly
+					var saveFile:File = currentFile;
+					saveToFile(saveFile, st.xml.toXMLString());
+				}
+				
+			}
+			
+			public function saveAsLSysHandler():void {
+				
+				var fileChooser:File = File.documentsDirectory.resolvePath(currentFileName);
+				
+				fileChooser.browseForSave("Save As");
+				fileChooser.addEventListener(Event.SELECT, fileSaveLSys);
+				
+				
+			}
+			
+			private function fileSaveLSys(e:Event):void {
+				
+				var saveFile:File = e.target as File;
+				saveToFile(saveFile, st.xml.toXMLString());
+				
+				currentFile = saveFile;
+				currentFileName = saveFile.name;
+				
+				// change window title
+				setWindowTitle();
+			}
+			
+			
+			public function loadLSysHandler():void{
+				var loadFile:File = new File();
+				loadFile.browseForOpen("Open L-system",[new FileFilter("L-Systems", "*.lsys")]);
+				loadFile.addEventListener(Event.SELECT, fileOpenLoadLSys);
+			}
+			
+			private var readStream:FileStream;
+			
+			private function fileOpenLoadLSys(e:Event):void {
+				
+				var currentFile:File = e.target as File;
+				
+				fileLoadLSys( currentFile );
+				
+			}
+			
+			private function fileLoadLSys(currentFile:File):void {
+				
+				var fileName:String = currentFile.name;
+				readStream = new FileStream();
+				readStream.open(currentFile, FileMode.READ);
+				var fileString:String = readStream.readUTFBytes(readStream.bytesAvailable);
+				
+				var xml:XML = new XML(fileString);
+				
+				currentFileName = fileName;
+				this.currentFile = currentFile;
+				
+				// change window title
+				setWindowTitle();
+				
+				// the order in which this happens makes a difference apparently
+				// does this mean we have a lot of overhead calculation?			
+				
+				st.iterations = 1;
+				st.enabled = false;
+				
+				// update all the fields and the L-system
+				input_commands.text 	= xml.rules.commands;
+				input_axiom.text 		= xml.rules.axiom;
+				stepper_angle.value 	= xml.control.angle;
+				
+				stepper_ratio.value		= xml.control.ratio;
+				
+				stepper_lineThickness.value  = xml.control.linethickness;
+				st.lineColor				= xml.control.linecolor;
+				
+				
+				
+				st.enabled = true;
+				slider_iterations.value = xml.control.iterations;
+				st.iterations = slider_iterations.value;
+				
+				// TODO : fix problem work around read only
+				//cp_lineColor			= xml.control.lineColor;
+				
+				
+			}
+			
+			private function saveIOErrorHandler(e:IOErrorEvent):void{
+				trace("IO ERROR");
+			}
+			
+			
+			public function saveLSysSVGHandler():void {
+				
+				
+				var fileChooser:File = File.documentsDirectory.resolvePath("lsystem-" + currentDateString() + ".svg");
+				
+				fileChooser.browseForSave("Save As");
+				fileChooser.addEventListener(Event.SELECT, fileSaveSVG);
+				
+			}
+			
+			private function currentDateString():String {
+				var d:Date = new Date();
+				return "" + d.fullYear + d.month + d.date + "-" + d.hours + d.minutes + d.seconds;
+			}
+			
+			public function fileSaveSVG(e:Event):void {
+				var saveFile:File = e.target as File;
+				saveToFile(saveFile, st.getSVG());
+			}
+			
+			
+			
+			private function saveToFile(f:File, str:String):void {
+				var stream:FileStream = new FileStream();
+				
+				stream.openAsync(f, FileMode.WRITE);
+				stream.addEventListener(IOErrorEvent.IO_ERROR, saveFileError);
+				
+				
+				stream.writeUTFBytes(str);
+				stream.close();
+				
+			}
+			
+			private function saveFileError(e:IOErrorEvent):void {
+				// do an alert here
+				trace("--File Save failed!");
+			}
+			
+			private function setWindowTitle():void{
+				nativeWindow.title = "Elise " + version + " - " + currentFileName;
+			}
+			
+
+		]]>
+	</fx:Script>
+		
+		<!-- Menu components -->
+		<!--
+		<mx:FlexNativeMenu  id="nativeMenu" 
+							dataProvider="{applicationMenu}" 
+							labelField="@label" 
+							keyEquivalentField="@key" 
+							
+							keyEquivalentModifiersFunction="standardOSModifier" 
+							showRoot="false" 
+							
+							itemClick="nativeMenuCommand(event)"/>
+		-->
+	
+	<s:Group 
+		id="bg"
+		width="100%" height="100%" 
+		>
+		
+		<s:Label text="elise"  styleName="headerText" right="115" top="15"/>
+		<s:Label text="version {version} alpha" fontSize="9" right="125" top="53"/>
+		<s:Image source="media/elise_icon_64.png" right="10" top="5"/>
+	</s:Group>
+	
+	
+	<s:Group id="viewer" left="0" right="0" top="0" bottom="0" mouseDown="{viewer.setFocus()}">
+		<s:layout>
+			<layout:ZoomPanLayout id="zpLayout" animate="true" backgroundElements="{[gridBackground100,gridBackground10,gridBackground1]}"/>
+		</s:layout>
+		
+		<view:GridBackground id="gridBackground100" gridLineDistance="100"/>
+		<view:GridBackground id="gridBackground10" gridLineDistance="10"/>
+		<view:GridBackground id="gridBackground1" gridLineDistance="1"/>
+		
+		<components:LSystemTool id="st" width="500" height="500" angle="{slider_angle.value}"
+								x="200"
+								y="50"
+								axiom="{input_axiom.text}" commands="{input_commands.text}"
+								delay="{stepper_delay.value}" iterations="{slider_iterations.value}"
+								lineColor="{int(cp_lineColor.value)}" lineLength="300"
+								lineThickness="{stepper_lineThickness.value}"
+								ratio="{slider_ratio.value}"/>
+		
+	</s:Group>
+	
+	<!-- View Controller -->
+	<view:SimpleZoomPanController id="viewController" left="10" bottom="10"  target="{zpLayout}"/>
+	
+	<!-- controller -->
+	<s:Group right="10"  bottom="0" top="75" width="200">
+		<s:layout>
+			<s:VerticalLayout gap="10"/>
+		</s:layout>
+		<win:FoldablePanel width="100%" layout="absolute" title="Commands" height="{85 + input_commands.height}">
+			<lcom:AutoResizableTextArea 
+				editable="true" 
+				id="input_commands" 
+				text="F:F+F--F+F" 
+				right="5" left="5" top="49"
+				autoResize="true" height="62"/>
+			<s:TextInput text="F" id="input_axiom" right="5" top="5" left="5"/>
+			<s:Label text="Axiom" y="28" left="5"/>
+			<s:Label text="Rules" y="38" right="5" width="44" textAlign="right"/>
+		</win:FoldablePanel>
+		<win:FoldablePanel width="100%" height="236" layout="absolute" title="Control">
+			
+			<s:NumericStepper id="stepper_angle" y="41" left="100" right="10" maximum="+180"
+							  minimum="-180" stepSize=".02" value="60"/>
+			<s:Label y="44" left="10" right="100" text="Angle" textAlign="left"/>
+			<s:HSlider 
+				id="slider_angle" 
+				minimum="0" maximum="180" 
+				liveDragging="true" 
+				value="{stepper_angle.value}" 
+				y="66" left="10"
+				change="{stepper_angle.value=slider_angle.value}"
+				right="10"
+				stepSize="0"/>
+			
+			<s:Label y="12" left="10" right="100" text="Iterations" textAlign="left"/>
+			<s:NumericStepper id="slider_iterations" y="5" left="100" right="10" maximum="40"
+							  minimum="1" stepSize="1" value="1" />
+			
+			<s:NumericStepper 
+				stepSize=".002" 
+				maximum="1" minimum="0" 
+				value=".95" 
+				id="stepper_ratio" 
+				y="88" right="10" left="100" height="20"/>
+			<s:NumericStepper id="stepper_lineThickness" y="142" right="10" width="49" enabled="true"
+							  minimum="0" stepSize="1" value="1"/>
+			<s:Label y="92" left="10" right="100" text="Scaling" textAlign="left"/>
+			<s:HSlider 
+				id="slider_ratio" 
+				minimum="0" maximum="1" 
+				stepSize="0"
+				liveDragging="true" 
+				value="{stepper_ratio.value}" 
+				y="112" left="10"
+				change="{stepper_ratio.value=slider_ratio.value}"
+				right="10"/>
+			
+			<mx:ColorPicker x="44" y="141" id="cp_lineColor" selectedColor="#000000"/>
+			<s:Label y="148" left="10" text="Line"/>
+			<s:Label left="10" right="86" bottom="17" text="Delay (in ms)"/>
+			<s:NumericStepper id="stepper_delay" value="0" minimum="0" maximum="100" stepSize="1" width="49" right="10" bottom="10"/>
+			<s:Label x="75" y="148" text="thickness"/>
+		</win:FoldablePanel>
+
+		<win:FoldablePanel height="91" layout="absolute" title="Information" width="100%">
+			<s:Label y="10" text="{'lines: ' + st.lineCount}" left="10" right="10" id="lineCount_text"/>
+			<s:Label y="30" text="{'time: ' + st.timeTaken + ' ms'}" left="10" right="10" id="time_text"/>
+			<s:Label y="50" text="{'export time: ' + st.exportTimeTaken + ' ms'}" left="10" right="10" id="exportTime_text"/>
+		</win:FoldablePanel>
+		
+			
+			
+		</s:Group>
+		
+	
+</s:WindowedApplication>

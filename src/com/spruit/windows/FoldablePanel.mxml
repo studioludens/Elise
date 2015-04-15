@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Panel 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	layout="absolute"
+	
+	creationComplete="onCreationComplete()"
+	 verticalScrollPolicy="off"
+	 horizontalScrollPolicy="off"
+	 titleIcon="@Embed(source='/media/images/arrow_up_grey.png')"
+	 verticalGap="10"
+	 
+	>
+	<mx:Script>
+		<![CDATA[
+		
+			private var _folded:Boolean = false;
+			private var _origHeight:Number;
+			private var _origWidth:Number;
+			
+			private var foldEvent:FoldEvent = new FoldEvent("fold");
+			private var unfoldEvent:FoldEvent = new FoldEvent("unfold");
+			
+			[Bindable] public var animationTime:Number = 200;
+			[Bindable] public var foldedWidth:Number;
+			
+			[Embed(source="/media/images/arrow_down_grey.png")] public var arrowDown:Class;
+			[Embed(source="/media/images/arrow_up_grey.png")] public var arrowUp:Class;
+			
+			private function init():void{
+				
+			}
+			
+			private function onCreationComplete():void{
+				
+				
+				_origHeight = height;
+				
+				if(_folded){
+					var hh:Number = this.getStyle("headerHeight");
+					height = hh;
+					
+					
+					_origWidth = width;
+					if(!foldedWidth) {
+						foldedWidth = width;
+					} else {
+						width = foldedWidth;
+					}
+				} 
+				
+				//trace("[FoldablePanel] We are onCreationComplete()! - folded: " + _folded + " foldedWidth: " + foldedWidth);
+				
+
+				
+				this.titleBar.addEventListener(MouseEvent.CLICK, onMouseClick);
+				this.titleBar.buttonMode = true;
+				
+				
+				
+			}
+						
+			private function onMouseClick(e:MouseEvent):void{
+			
+				if(folded)	{
+					openPanel();
+				}	
+				else	{
+					closePanel();
+				}
+			}
+			
+			public function openPanel():void	{
+				
+				folded = false;
+				//trace(unfoldEvent);
+				dispatchEvent(unfoldEvent);
+			}
+			
+			public function closePanel():void	{
+				
+				folded = true;
+				//trace(foldEvent);
+				dispatchEvent(foldEvent);
+			}
+			
+			public function set folded(value:Boolean):void {
+				//trace("We are setting folded to: " + value);
+				
+				_folded = value;
+				
+				if(panel_resize.isPlaying) panel_resize.end();
+				
+				
+				var hh:Number = this.getStyle("headerHeight");
+				var hw:Number = foldedWidth;
+				
+				
+				if(_folded){ // move to the folded state
+					panel_resize.heightFrom = _origHeight;
+					panel_resize.heightTo = hh;
+					
+					
+					panel_resize.widthFrom = _origWidth;
+					panel_resize.widthTo = hw;
+					
+					
+					_origHeight = this.height;
+					_origWidth = this.width;
+					
+					panel_resize.play();
+					
+					this.titleIcon = arrowDown;
+					
+					
+					
+				} else { // move to the opened state
+					//this.height = _origHeight;
+					
+					panel_resize.heightFrom = hh;
+					panel_resize.heightTo = _origHeight;
+					
+					panel_resize.widthFrom = hw;
+					panel_resize.widthTo = _origWidth;
+					
+					panel_resize.play();
+					
+					this.titleIcon = arrowUp;
+					
+				}
+				
+				this.invalidateDisplayList();
+			}
+			
+			[Bindable] public function get folded():Boolean {
+				return _folded;
+			}
+			
+		]]>
+	</mx:Script>
+	<mx:Resize id="panel_resize" target="{this}" duration="{animationTime}"/>
+</mx:Panel>

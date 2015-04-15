@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:Canvas xmlns:mx="http://www.adobe.com/2006/mxml" 
+	width="55" height="47"
+	initialize="init()"
+	 creationComplete="onCreationComplete()"
+	 xmlns:filters="flash.filters.*"
+	   buttonMode="true">
+	
+
+	<mx:states>
+		
+		<mx:State name="selected">
+			<mx:SetProperty target="{image}" name="filters">
+					<mx:value>
+						<mx:Array>
+							<filters:GlowFilter id="selected_glow" color="#129FD6" alpha=".9" strength="3"  blurX="10" blurY="10"/>
+						</mx:Array>
+					</mx:value>
+			</mx:SetProperty>
+		</mx:State>
+		<mx:State name="hover" >
+			
+			<mx:SetProperty name="filters">
+						<mx:value>
+							<mx:Array>
+								<filters:GlowFilter id="hover_glow" color="#BBBBBB"/>
+							</mx:Array>
+						</mx:value>
+				</mx:SetProperty>
+			
+		</mx:State>
+		<mx:State name="mousedown">
+			<mx:SetProperty target="{image}" name="filters">
+					<mx:value>
+						<mx:Array>
+							<filters:GlowFilter id="glow" color="#BBBBBB" strength="10"  blurX="2" blurY="2"/>
+						</mx:Array>
+					</mx:value>
+			</mx:SetProperty>
+		</mx:State>
+		
+	</mx:states>
+	
+	
+	<mx:Image 
+		id="image"
+		width="100%"
+		height="100%"
+		/>
+	
+	<mx:Script>
+		<![CDATA[
+		
+			import com.spruit.vis.KeyShapeSprite;
+			import classes.CoasterPatterns;
+			import mx.events.*;
+			
+			
+			[Embed(source="/media/images/patternTypes.swf",symbol="pattern_1")] public var _4_AAAA_Annyy:Class;
+			[Embed(source="/media/images/patternTypes.swf",symbol="pattern_2")] public var _4_ABAB_Annyy_Bnyyn:Class;
+			[Embed(source="/media/images/patternTypes.swf",symbol="pattern_3")] public var _4_ABAB_Annyn_Bnyyy:Class;
+			[Embed(source="/media/images/patternTypes.swf",symbol="pattern_4")] public var _6_AAAAAA_Annyy:Class;
+			[Embed(source="/media/images/patternTypes.swf",symbol="pattern_5")] public var _6_ABABAB_Annyy_Bnyyn:Class;
+			[Embed(source="/media/images/patternTypes.swf",symbol="pattern_6")] public var _6_ABABAB_Annyn_Bnyyy:Class;
+			
+			private var _patternType:String = "";
+			
+			/* this item is selectable */
+			private var _selected:Boolean = false;
+		
+			public function set shapeType(type:String):void{
+				_patternType = type;
+				
+				
+			}
+			
+			public function get shapeType():String {
+				return _patternType;
+			}
+			
+			public function get selected():Boolean {
+				return _selected;
+			}
+			
+			[Bindable("valueCommit")]
+			mx_internal function setShapeType(value:String):void {
+				_patternType = value;
+				dispatchEvent(new FlexEvent(FlexEvent.VALUE_COMMIT));
+			}
+			
+			public function set selected(value:Boolean):void {
+				
+				_selected = value;
+				
+				if(_selected){
+					this.currentState = 'selected';
+				}
+				if(!_selected){
+					currentState = '';
+				}
+			}
+			
+			private function init():void {
+				image.addEventListener(MouseEvent.MOUSE_OVER, onMouseOver);
+				image.addEventListener(MouseEvent.MOUSE_OUT, onMouseOut);
+				image.addEventListener(MouseEvent.MOUSE_UP, onMouseUp);
+				image.addEventListener(MouseEvent.MOUSE_DOWN, onMouseDown);
+				//
+				image.addEventListener(MouseEvent.ROLL_OUT, onMouseRollOut);
+				image.addEventListener(MouseEvent.CLICK, onMouseClick);
+				
+				
+			}
+			
+			/*public override function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void{
+				
+				
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+				
+				if(this._selected){
+					this.currentState = 'selected';
+				}
+			}*/
+			
+			private function onCreationComplete():void {
+				if(_patternType == "_4_AAAA_Annyy"){
+					image.source = _4_AAAA_Annyy;
+				}
+				if(_patternType == "_4_ABAB_Annyy_Bnyyn"){
+					image.source = _4_ABAB_Annyy_Bnyyn;
+				}
+				if(_patternType == "_4_ABAB_Annyn_Bnyyy"){
+					image.source = _4_ABAB_Annyn_Bnyyy;
+				}
+				if(_patternType == "_6_AAAAAA_Annyy"){
+					image.source = _6_AAAAAA_Annyy;
+				}
+				if(_patternType == "_6_ABABAB_Annyy_Bnyyn"){
+					image.source = _6_ABABAB_Annyy_Bnyyn;
+				}
+				if(_patternType == "_6_ABABAB_Annyn_Bnyyy"){
+					image.source = _6_ABABAB_Annyn_Bnyyy;
+				}
+			}
+			
+			/* mouse hover effect */
+			private function onMouseOver(e:MouseEvent):void {
+				// doing a mouse over!
+				if(currentState != 'hover' && !_selected)
+					currentState = 'hover';
+				
+			}
+			/* mouse hover effect */
+			private function onMouseOut(e:MouseEvent):void {
+				if(!_selected){
+					trace("not selected? " + currentState);
+					currentState = '';
+				} else {
+					if(currentState != 'selected') currentState = 'selected';
+				}
+				
+			}
+			
+			private function onMouseRollOut(e:MouseEvent):void{
+				onMouseOut(e);
+			}
+			
+			private function onMouseDown(e:MouseEvent):void {
+				if(currentState != 'mousedown'){
+					currentState = "mousedown";
+				}
+			}
+			
+			private function onMouseUp(e:MouseEvent):void {
+				if(currentState != 'hover'){
+					currentState = (_selected ? "selected" : 'hover');
+				}
+			}
+			
+			
+			
+			private function onMouseClick(e:MouseEvent):void{
+				//trace("clicked on Design - " + this.designId);
+				//var event:ListEvent = new ListEvent("itemClick");
+				//event.itemRenderer = this;
+				
+				//owner.dispatchEvent(event);
+				
+			}
+		]]>
+	</mx:Script>
+</mx:Canvas>

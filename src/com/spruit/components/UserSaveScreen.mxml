@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com:GlowCanvas 
+	xmlns:mx="http://www.adobe.com/2006/mxml" 
+	xmlns:com="com.spruit.components.*" 
+	
+	width="190" height="190" xmlns:cl="classes.*" 
+	backgroundColor="#111111" backgroundAlpha=".6"
+	 defaultButton="{save}">
+	
+	<mx:Metadata>
+	 	[Event(name="userSave", type="com.spruit.events.UserSaveEvent")]
+	 </mx:Metadata>
+	 
+	<mx:Script>
+		<![CDATA[
+		
+			import com.spruit.events.*;
+			
+			private function onSaveClick():void {
+				// do stuff here for when we click on the login button
+				trace("UserSaveScreen: pressed save button");
+				// send a message to our parent we are ready to login
+				
+				var evt:UserSaveEvent = new UserSaveEvent("userSave", designName.text, privateDesign.selected, sendEmail.selected);
+				
+				// event fire!
+				dispatchEvent(evt);
+			}
+			
+			private function onCancelClick():void {
+				// do stuff here for when we click on the cancel button
+				this.visible = false;
+				this.enabled = false;
+				// remove focus
+				this.resetFocus();
+			}
+		]]>
+	</mx:Script>
+	
+	<!-- validation script -->
+	<mx:Script>
+        <![CDATA[
+            import mx.validators.Validator;
+            import mx.events.ValidationResultEvent;
+            import mx.controls.Alert;
+  
+            [Bindable]
+            public var formIsValid:Boolean = false;
+
+            [Bindable]
+            public var formIsEmpty:Boolean = true;
+    
+            // Holds a reference to the currently focussed 
+            // control on the form.
+            private var focussedFormControl:DisplayObject;
+                                  
+            // Validate the form
+            private function validateForm(event:Event):void 
+            {   
+
+				trace("doing da validation...");     
+                // Save a reference to the currently focussed form control
+                // so that the isValid() helper method can notify only
+                // the currently focussed form control and not affect
+                // any of the other form controls.
+                focussedFormControl = event.target as DisplayObject;    
+
+                // Mark the form as valid to start with                
+                formIsValid = true;            
+
+                // Check if form is empty
+                formIsEmpty = (designName.text == ""); 
+
+                // Run each validator in turn, using the isValid() 
+                // helper method and update the value of formIsValid
+                // accordingly.
+                
+                
+                validate(form_designname_valid); 
+                if(!formIsValid) trace("validation failed on: designName");               
+                
+                
+            }
+     
+             // Helper method. Performs validation on a passed Validator instance.
+             // Validator is the base class of all Flex validation classes so 
+             // you can pass any validation class to this method.  
+             private function validate(validator:Validator):Boolean
+             {                
+             	
+             	// if we can't find the form element we need, don't bother
+             	if(!validator.source) return true;
+             	
+             	
+             	
+                // Get a reference to the component that is the
+                // source of the validator.
+                 var validatorSource:DisplayObject = validator.source as DisplayObject;
+                 
+                
+                
+                // Suppress events if the current control being validated is not
+                // the currently focussed control on the form. This stops the user
+                // from receiving visual validation cues on other form controls.
+                var suppressEvents:Boolean = (validatorSource != focussedFormControl);
+                
+                // Carry out validation. Returns a ValidationResultEvent.
+                // Passing null for the first parameter makes the validator 
+                // use the property defined in the property tag of the
+                // <mx:Validator> tag.
+                var event:ValidationResultEvent = validator.validate(null, suppressEvents); 
+                                
+                // Check if validation passed and return a boolean value accordingly
+                 var currentControlIsValid:Boolean = (event.type == ValidationResultEvent.VALID);
+                 
+                 // Update the formIsValid flag
+                 formIsValid = formIsValid && currentControlIsValid;
+                 
+                 return currentControlIsValid;
+              }
+              
+              // Event handler: Gets called when all child components
+              // have been created.
+              private function creationCompleteHandler():void
+              {
+                // Set the focus on the first field so 
+                // user does not have to mouse over to it.
+                // Note that the user still has to click on the 
+                // Flex application to give it focus. This is 
+                // a currently limitation in Flex.
+                  //resetFocus(); 
+              }
+            
+            // Submit form if everything is valid. 
+            private function submitForm():void 
+            {
+                Alert.show("Form Submitted!"); 
+            }
+            
+            // Clear the form and reset validation
+            private function clearFormHandler():void
+            {
+                // Clear all input fields
+                designName.text = "";         
+                
+                
+                // Clear validation error messages
+                designName.errorString = "";  
+                
+                
+                // Flag that the form is now clear
+                formIsEmpty = true;
+                
+                // Set the focus on the first field so 
+                // user does not have to mouse over to it.
+                resetFocus();               
+            }
+            
+            // Helper method. Sets the focus on the first field so 
+            // user does not have to mouse over to it.
+            public function resetFocus():void
+            {
+                focusManager.setFocus(designName);
+            }
+            
+            public function reset():void {
+            	clearFormHandler();
+            }
+        ]]>
+    </mx:Script>
+    
+    <!-- these will help us with validating form input -->
+
+    <mx:StringValidator 
+    	id="form_designname_valid" 
+    	required="true" 
+    	source="{designName}" 
+    	property="text" 
+    	minLength="0" 
+    	maxLength="100"
+    	requiredFieldError="We need a design name to save"/>
+    
+    
+	<mx:Label text="design name" top="10" left="10"/>
+	<mx:TextInput id="designName" change="validateForm(event)" y="34" left="10" right="15"/>
+	
+    
+     <mx:CheckBox y="73" id="privateDesign" width="22" left="15"/>
+     <mx:CheckBox y="106" id="sendEmail" width="22" left="15"/>
+     <mx:Text y="70" text="this design is private" right="15" left="35"/>
+     <mx:Text y="103" text="send me an email with this design" right="15" left="35"/>
+    
+   
+    
+     <cl:GlowButton 
+     	id="save" 
+     	label="save" 
+     	width="100" 
+     	height="25"
+     	buttonMode="true"
+     	 toolTip=""
+     	
+     	icon="@Embed(source='../../../media/images/save_icon_small.png')"
+     	horizontalGap="5"
+     	 click="onSaveClick()"
+    	enabled="{formIsValid}"
+     left="5" bottom="5"/>
+     
+      <cl:GlowButton 
+    	id="cancel" 
+    	label="cancel" 
+    	width="65" 
+    	height="25"
+    	buttonMode="true"
+    	horizontalGap="5"
+    	click="onCancelClick()"
+     right="5" bottom="5"/>
+</com:GlowCanvas>
