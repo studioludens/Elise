@@ -3,14 +3,18 @@ import {
   exportSvg,
   hsvToRgb,
   interpret,
+  InvalidLsysError,
   MaxLengthExceededError,
+  parseLsys,
   parseRules,
   PRESETS,
   rewrite,
   rgbToHex,
+  serializeLsys,
   serializeRules,
   type DrawEvent,
   type HSV,
+  type LsysFile,
   type Preset,
 } from "@elise/engine";
 import { AxiomInput } from "./components/AxiomInput.js";
@@ -139,6 +143,54 @@ export function App(): JSX.Element {
     applyPreset(p);
   };
 
+  const currentAsLsys = (): LsysFile => ({
+    name: presetName,
+    axiom: params.axiom,
+    rules,
+    params: {
+      angle: params.angle,
+      iterations: params.iterations,
+      ratio: params.ratio,
+      initialLineLength: params.initialLineLength,
+      initialLineThickness: params.initialLineThickness,
+      hsv: params.hsv,
+    },
+  });
+
+  const onSaveLsys = () => {
+    const xml = serializeLsys(currentAsLsys());
+    const blob = new Blob([xml], { type: "application/xml" });
+    downloadBlob(blob, `${safeFilename(presetName || params.axiom)}.lsys`);
+  };
+
+  const onOpenLsys = (text: string, filename: string) => {
+    try {
+      const file = parseLsys(text);
+      const stem = filename.replace(/\.[^.]+$/, "");
+      const displayName = file.name ?? stem;
+      setPresetName(displayName);
+      setParams({
+        axiom: file.axiom,
+        rulesText: serializeRules(file.rules),
+        angle: file.params.angle,
+        iterations: file.params.iterations,
+        ratio: file.params.ratio,
+        initialLineLength: file.params.initialLineLength,
+        initialLineThickness: file.params.initialLineThickness,
+        hsv: file.params.hsv,
+      });
+      setError(null);
+    } catch (err) {
+      const msg =
+        err instanceof InvalidLsysError
+          ? `Couldn't open file: ${err.message}`
+          : err instanceof Error
+            ? err.message
+            : String(err);
+      setError(msg);
+    }
+  };
+
   return (
     <main
       style={{
@@ -250,7 +302,12 @@ export function App(): JSX.Element {
             WebGPU
           </label>
         </fieldset>
-        <Toolbar onExportSvg={onExportSvg} onResetPreset={onResetPreset} />
+        <Toolbar
+          onExportSvg={onExportSvg}
+          onResetPreset={onResetPreset}
+          onSaveLsys={onSaveLsys}
+          onOpenLsys={onOpenLsys}
+        />
         <div style={{ marginTop: "auto", fontSize: 11, color: "#888" }}>
           {events.length.toLocaleString()} draw events ·{" "}
           {parseRules(params.rulesText).length} rules

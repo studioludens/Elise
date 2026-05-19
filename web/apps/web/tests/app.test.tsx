@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { fireEvent, render, screen, cleanup } from "@testing-library/react";
+import { fireEvent, render, screen, cleanup, waitFor } from "@testing-library/react";
 import { App } from "../src/App.js";
 import { PRESETS } from "@elise/engine";
 
@@ -107,6 +107,71 @@ describe("App", () => {
     fireEvent.change(angleNum, { target: { value: "45" } });
     expect((screen.getByLabelText(/Angle value/i) as HTMLInputElement).value).toBe(
       "45",
+    );
+  });
+
+  test("save .lsys then open .lsys round-trips axiom + rules", async () => {
+    let savedXml = "";
+    const RealBlob = globalThis.Blob;
+    class CapturingBlob extends RealBlob {
+      constructor(parts: BlobPart[], opts?: BlobPropertyBag) {
+        super(parts, opts);
+        for (const p of parts) if (typeof p === "string") savedXml += p;
+      }
+    }
+    (globalThis as { Blob: typeof Blob }).Blob = CapturingBlob as never;
+    URL.createObjectURL = vi.fn(() => "blob:fake") as never;
+    URL.revokeObjectURL = vi.fn() as never;
+    const clickSpy = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => {});
+
+    render(<App />);
+    const dragon = PRESETS.find((p) => p.name === "Dragon curve")!;
+    fireEvent.change(screen.getByLabelText(/^Preset$/i), {
+      target: { value: dragon.name },
+    });
+
+    fireEvent.click(screen.getByRole("button", { name: /save \.lsys/i }));
+    expect(savedXml).toContain("<lsystem");
+    expect(savedXml).toContain(`<axiom>${dragon.axiom}</axiom>`);
+
+    // Mutate the editor, then reload the saved file and verify restoration.
+    fireEvent.change(screen.getByLabelText(/^Axiom$/i), {
+      target: { value: "ZZZ" },
+    });
+    expect((screen.getByLabelText(/^Axiom$/i) as HTMLInputElement).value).toBe("ZZZ");
+
+    const input = screen.getByTestId("lsys-file-input") as HTMLInputElement;
+    const file = new File([savedXml], "dragon.lsys", { type: "application/xml" });
+    // jsdom's File doesn't reliably implement async text(); pin it.
+    (file as unknown as { text: () => Promise<string> }).text = () =>
+      Promise.resolve(savedXml);
+    Object.defineProperty(input, "files", { value: [file], configurable: true });
+    fireEvent.change(input);
+
+    await waitFor(() =>
+      expect((screen.getByLabelText(/^Axiom$/i) as HTMLInputElement).value).toBe(
+        dragon.axiom,
+      ),
+    );
+
+    clickSpy.mockRestore();
+    (globalThis as { Blob: typeof Blob }).Blob = RealBlob;
+  });
+
+  test("opening a malformed .lsys surfaces an error message", async () => {
+    render(<App />);
+    const input = screen.getByTestId("lsys-file-input") as HTMLInputElement;
+    const file = new File(["<not-an-lsystem/>"], "broken.lsys", {
+      type: "application/xml",
+    });
+    (file as unknown as { text: () => Promise<string> }).text = () =>
+      Promise.resolve("<not-an-lsystem/>");
+    Object.defineProperty(input, "files", { value: [file], configurable: true });
+    fireEvent.change(input);
+    await waitFor(() =>
+      expect(screen.getByRole("alert").textContent).toMatch(/Couldn't open file/),
     );
   });
 

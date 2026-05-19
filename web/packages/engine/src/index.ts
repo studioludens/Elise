@@ -7,3 +7,4 @@ export * from "./turtle.js";
 export * from "./interpret.js";
 export * from "./svg.js";
 export * from "./presets.js";
+export * from "./lsys.js";
