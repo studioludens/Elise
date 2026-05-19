@@ -20,6 +20,9 @@ import { ColorPicker } from "./components/ColorPicker.js";
 import { PresetSelector } from "./components/PresetSelector.js";
 import { Toolbar } from "./components/Toolbar.js";
 import { CanvasPreview } from "./components/CanvasPreview.js";
+import { WebGpuPreview } from "./components/WebGpuPreview.js";
+
+type Backend = "canvas2d" | "webgpu";
 
 interface Params {
   axiom: string;
@@ -69,6 +72,7 @@ function downloadBlob(blob: Blob, filename: string): void {
 export function App(): JSX.Element {
   const [presetName, setPresetName] = useState(DEFAULT_PRESET.name);
   const [params, setParams] = useState<Params>(() => fromPreset(DEFAULT_PRESET));
+  const [backend, setBackend] = useState<Backend>("canvas2d");
   const [error, setError] = useState<string | null>(null);
   const lastGoodEvents = useRef<DrawEvent[]>([]);
 
@@ -214,6 +218,38 @@ export function App(): JSX.Element {
           value={colorHexString}
           onChange={(_hex, hsv) => setParams((p) => ({ ...p, hsv }))}
         />
+        <fieldset
+          style={{
+            display: "flex",
+            gap: 8,
+            border: "1px solid #ddd",
+            borderRadius: 4,
+            padding: "6px 8px",
+            fontSize: 12,
+          }}
+        >
+          <legend style={{ padding: "0 4px", color: "#666" }}>Renderer</legend>
+          <label style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <input
+              type="radio"
+              name="backend"
+              value="canvas2d"
+              checked={backend === "canvas2d"}
+              onChange={() => setBackend("canvas2d")}
+            />
+            Canvas2D
+          </label>
+          <label style={{ display: "flex", gap: 4, alignItems: "center" }}>
+            <input
+              type="radio"
+              name="backend"
+              value="webgpu"
+              checked={backend === "webgpu"}
+              onChange={() => setBackend("webgpu")}
+            />
+            WebGPU
+          </label>
+        </fieldset>
         <Toolbar onExportSvg={onExportSvg} onResetPreset={onResetPreset} />
         <div style={{ marginTop: "auto", fontSize: 11, color: "#888" }}>
           {events.length.toLocaleString()} draw events ·{" "}
@@ -221,7 +257,11 @@ export function App(): JSX.Element {
         </div>
       </aside>
       <section style={{ position: "relative" }}>
-        <CanvasPreview events={events} errorMessage={error} />
+        {backend === "canvas2d" ? (
+          <CanvasPreview events={events} errorMessage={error} />
+        ) : (
+          <WebGpuPreview events={events} errorMessage={error} />
+        )}
       </section>
     </main>
   );

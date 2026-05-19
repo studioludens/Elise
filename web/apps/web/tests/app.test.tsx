@@ -109,4 +109,15 @@ describe("App", () => {
       "45",
     );
   });
+
+  test("backend toggle swaps Canvas2D for WebGPU and shows an unsupported notice in jsdom", () => {
+    render(<App />);
+    expect(screen.getByTestId("lsystem-canvas")).toBeInTheDocument();
+    const webgpu = screen.getByLabelText(/WebGPU/i) as HTMLInputElement;
+    fireEvent.click(webgpu);
+    expect(screen.queryByTestId("lsystem-canvas")).not.toBeInTheDocument();
+    expect(screen.getByTestId("lsystem-webgpu-canvas")).toBeInTheDocument();
+    // jsdom doesn't expose `navigator.gpu`, so the component must report it.
+    expect(screen.getByRole("status").textContent).toMatch(/WebGPU/i);
+  });
 });
