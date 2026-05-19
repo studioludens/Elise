@@ -24,7 +24,20 @@ npm run dev      # vite dev server for the web app
 npm run build    # build all workspaces; web app lands in apps/web/dist
 ```
 
-## Deploying to Cloudflare Pages
+## Deploying
+
+### GitHub Pages (zero-CLI)
+
+A workflow at `.github/workflows/deploy-pages.yml` builds and publishes the
+web app to GitHub Pages on every push to `master`. To enable:
+
+1. Repo **Settings → Pages → Source**: set to **GitHub Actions**.
+2. Push to `master` (or run the workflow from the Actions tab).
+
+The workflow passes `VITE_BASE=/<repo-name>/` so asset paths resolve under
+`https://<owner>.github.io/<repo>/`.
+
+### Cloudflare Pages
 
 The built artifact under `apps/web/dist` is fully static. Easiest paths:
 
