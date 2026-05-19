@@ -1,0 +1,23 @@
+{
+  "name": "@elise/gpu",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "echo 'no tests yet'",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@elise/engine": "workspace:*"
+  },
+  "devDependencies": {
+    "@webgpu/types": "^0.1.49",
+    "typescript": "^5.6.3"
+  }
+}
