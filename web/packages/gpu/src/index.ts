@@ -17,6 +17,20 @@ export {
   POLY_VERTEX_STRIDE,
   type SegmentBuffers,
 } from "./segments.js";
+export { rewriteOnGpu, type RewriteOptions } from "./rewrite-gpu.js";
+export {
+  encodeTokens,
+  decodeTokens,
+  tokensToString,
+  isNoArg,
+  noArgValue,
+  u32ToF32Bits,
+  f32BitsToU32,
+  TOKEN_STRIDE,
+  NO_ARG_BITS,
+  type EncodedTokens,
+  type DecodedToken,
+} from "./tokens-gpu.js";
 
 /** Legacy probe — kept around for callers that imported it earlier. */
 export async function requestAdapter(): Promise<GPUAdapter | null> {
