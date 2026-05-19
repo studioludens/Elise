@@ -25,6 +25,10 @@ import { PresetSelector } from "./components/PresetSelector.js";
 import { Toolbar } from "./components/Toolbar.js";
 import { CanvasPreview } from "./components/CanvasPreview.js";
 import { WebGpuPreview } from "./components/WebGpuPreview.js";
+import { StatsHud } from "./components/StatsHud.js";
+import { loadState } from "./storage.js";
+import { useAutosave } from "./useAutosave.js";
+import { useShortcuts } from "./useShortcuts.js";
 
 type Backend = "canvas2d" | "webgpu";
 
@@ -56,7 +60,33 @@ function fromPreset(p: Preset): Params {
   };
 }
 
+function paramsFromLsys(file: LsysFile): Params {
+  return {
+    axiom: file.axiom,
+    rulesText: serializeRules(file.rules),
+    angle: file.params.angle,
+    iterations: file.params.iterations,
+    ratio: file.params.ratio,
+    initialLineLength: file.params.initialLineLength,
+    initialLineThickness: file.params.initialLineThickness,
+    hsv: file.params.hsv,
+  };
+}
+
 const DEFAULT_PRESET = PRESETS[0]!;
+
+type InitialState = { presetName: string; params: Params };
+
+function initialState(): InitialState {
+  const restored = loadState();
+  if (restored) {
+    return {
+      presetName: restored.name ?? "Restored",
+      params: paramsFromLsys(restored),
+    };
+  }
+  return { presetName: DEFAULT_PRESET.name, params: fromPreset(DEFAULT_PRESET) };
+}
 
 function safeFilename(s: string): string {
   return s.replace(/[^a-z0-9-_]+/gi, "-").replace(/^-+|-+$/g, "").toLowerCase() || "output";
@@ -74,17 +104,29 @@ function downloadBlob(blob: Blob, filename: string): void {
 }
 
 export function App(): JSX.Element {
-  const [presetName, setPresetName] = useState(DEFAULT_PRESET.name);
-  const [params, setParams] = useState<Params>(() => fromPreset(DEFAULT_PRESET));
+  const initial = useMemo(initialState, []);
+  const [presetName, setPresetName] = useState(initial.presetName);
+  const [params, setParams] = useState<Params>(initial.params);
   const [backend, setBackend] = useState<Backend>("canvas2d");
   const [error, setError] = useState<string | null>(null);
+  const [showStats, setShowStats] = useState(true);
   const lastGoodEvents = useRef<DrawEvent[]>([]);
+  const lastGoodSystemLength = useRef<number>(0);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const rules = useMemo(() => parseRules(params.rulesText), [params.rulesText]);
 
-  const pipeline = useMemo<{ events: DrawEvent[]; error: string | null }>(() => {
+  const pipeline = useMemo<{
+    events: DrawEvent[];
+    systemLength: number;
+    rewriteMs: number;
+    interpretMs: number;
+    error: string | null;
+  }>(() => {
     try {
+      const t0 = performance.now();
       const system = rewrite(params.axiom, rules, params.iterations);
+      const t1 = performance.now();
       const evs = interpret(system, {
         angle: params.angle,
         ratio: params.ratio,
@@ -92,8 +134,16 @@ export function App(): JSX.Element {
         initialLineThickness: params.initialLineThickness,
         initialHsv: params.hsv,
       });
+      const t2 = performance.now();
       lastGoodEvents.current = evs;
-      return { events: evs, error: null };
+      lastGoodSystemLength.current = system.length;
+      return {
+        events: evs,
+        systemLength: system.length,
+        rewriteMs: t1 - t0,
+        interpretMs: t2 - t1,
+        error: null,
+      };
     } catch (err) {
       let msg: string;
       if (err instanceof MaxLengthExceededError) {
@@ -103,7 +153,13 @@ export function App(): JSX.Element {
       } else {
         msg = String(err);
       }
-      return { events: lastGoodEvents.current, error: msg };
+      return {
+        events: lastGoodEvents.current,
+        systemLength: lastGoodSystemLength.current,
+        rewriteMs: 0,
+        interpretMs: 0,
+        error: msg,
+      };
     }
   }, [
     params.axiom,
@@ -169,16 +225,7 @@ export function App(): JSX.Element {
       const stem = filename.replace(/\.[^.]+$/, "");
       const displayName = file.name ?? stem;
       setPresetName(displayName);
-      setParams({
-        axiom: file.axiom,
-        rulesText: serializeRules(file.rules),
-        angle: file.params.angle,
-        iterations: file.params.iterations,
-        ratio: file.params.ratio,
-        initialLineLength: file.params.initialLineLength,
-        initialLineThickness: file.params.initialLineThickness,
-        hsv: file.params.hsv,
-      });
+      setParams(paramsFromLsys(file));
       setError(null);
     } catch (err) {
       const msg =
@@ -190,6 +237,24 @@ export function App(): JSX.Element {
       setError(msg);
     }
   };
+
+  const onPickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const text = await file.text();
+    onOpenLsys(text, file.name);
+    e.target.value = "";
+  };
+
+  const triggerOpenDialog = () => fileInputRef.current?.click();
+
+  useAutosave(currentAsLsys());
+  useShortcuts({
+    onSave: onSaveLsys,
+    onOpen: triggerOpenDialog,
+    onReset: onResetPreset,
+    onExport: onExportSvg,
+  });
 
   return (
     <main
@@ -304,20 +369,52 @@ export function App(): JSX.Element {
         </fieldset>
         <Toolbar
           onExportSvg={onExportSvg}
-          onResetPreset={onResetPreset}
           onSaveLsys={onSaveLsys}
-          onOpenLsys={onOpenLsys}
+          onOpenLsys={triggerOpenDialog}
+          onResetPreset={onResetPreset}
         />
+        <label
+          style={{
+            display: "flex",
+            gap: 6,
+            alignItems: "center",
+            fontSize: 12,
+            color: "#666",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={showStats}
+            onChange={(e) => setShowStats(e.target.checked)}
+          />
+          Show stats
+        </label>
         <div style={{ marginTop: "auto", fontSize: 11, color: "#888" }}>
           {events.length.toLocaleString()} draw events ·{" "}
           {parseRules(params.rulesText).length} rules
         </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".lsys,.xml,application/xml,text/xml"
+          style={{ display: "none" }}
+          onChange={onPickFile}
+          data-testid="lsys-file-input"
+        />
       </aside>
       <section style={{ position: "relative" }}>
         {backend === "canvas2d" ? (
           <CanvasPreview events={events} errorMessage={error} />
         ) : (
           <WebGpuPreview events={events} errorMessage={error} />
+        )}
+        {showStats && (
+          <StatsHud
+            events={events}
+            systemLength={pipeline.systemLength}
+            rewriteMs={pipeline.rewriteMs}
+            interpretMs={pipeline.interpretMs}
+          />
         )}
       </section>
     </main>

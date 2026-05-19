@@ -63,4 +63,6 @@ A starter `wrangler.toml` is included at `apps/web/wrangler.toml`.
 - ✅ Milestone 7: GPU interpreter (Option B — CPU bracket walk + GPU expand)
 - ✅ Milestone 8: WebGPU pipeline wired into the React app behind a renderer toggle
 - ✅ Milestone 9: `.lsys` save/load (XML format mirroring the AS3 schema)
-- ⏭ Milestone 10: polish — presets gallery, autosave, error UI tuning
+- ✅ Milestone 10: polish — localStorage autosave/restore, keyboard
+  shortcuts (Cmd/Ctrl + S / O / E / R), stats HUD overlay, "custom"
+  label in the preset selector when state doesn't match a built-in

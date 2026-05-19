@@ -13,10 +13,12 @@ beforeEach(() => {
     unobserve() {}
     disconnect() {}
   };
+  localStorage.clear();
 });
 
 afterEach(() => {
   cleanup();
+  localStorage.clear();
 });
 
 describe("App", () => {
@@ -172,6 +174,28 @@ describe("App", () => {
     fireEvent.change(input);
     await waitFor(() =>
       expect(screen.getByRole("alert").textContent).toMatch(/Couldn't open file/),
+    );
+  });
+
+  test("stats HUD is visible by default and toggles off via the checkbox", () => {
+    render(<App />);
+    expect(screen.getByTestId("stats-hud")).toBeInTheDocument();
+    fireEvent.click(screen.getByLabelText(/Show stats/i));
+    expect(screen.queryByTestId("stats-hud")).not.toBeInTheDocument();
+  });
+
+  test("restores state from localStorage on mount", () => {
+    const dragon = PRESETS.find((p) => p.name === "Dragon curve")!;
+    const xml = `<?xml version="1.0"?><lsystem><name>Saved</name><rules><axiom>${dragon.axiom}</axiom><commands>${dragon.rules.map((r) => `${r.axiom}:${r.rule}`).join("\n")}</commands></rules><params><angle>${dragon.angle}</angle><iterations>${dragon.iterations}</iterations></params></lsystem>`;
+    localStorage.setItem("elise:state:v1", xml);
+    render(<App />);
+    expect((screen.getByLabelText(/^Axiom$/i) as HTMLInputElement).value).toBe(
+      dragon.axiom,
+    );
+    const selectEl = screen.getByLabelText(/^Preset$/i) as HTMLSelectElement;
+    expect(selectEl.value).toBe("Saved");
+    expect(selectEl.options[selectEl.selectedIndex]!.textContent).toMatch(
+      /Saved \(custom\)/,
     );
   });
 
