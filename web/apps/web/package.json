@@ -11,8 +11,8 @@
     "test": "echo 'no tests yet'"
   },
   "dependencies": {
-    "@elise/engine": "workspace:*",
-    "@elise/gpu": "workspace:*",
+    "@elise/engine": "*",
+    "@elise/gpu": "*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

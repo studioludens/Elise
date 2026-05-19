@@ -14,7 +14,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@elise/engine": "workspace:*"
+    "@elise/engine": "*"
   },
   "devDependencies": {
     "@webgpu/types": "^0.1.49",
