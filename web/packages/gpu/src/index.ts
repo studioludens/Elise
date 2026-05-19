@@ -19,6 +19,10 @@ export {
 } from "./segments.js";
 export { rewriteOnGpu, type RewriteOptions } from "./rewrite-gpu.js";
 export {
+  interpretOnGpu,
+  type InterpretGpuResult,
+} from "./interpret-gpu.js";
+export {
   encodeTokens,
   decodeTokens,
   tokensToString,
