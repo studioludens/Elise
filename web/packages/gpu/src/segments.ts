@@ -44,14 +44,14 @@ export function packColorRgba(hex: number): number {
   return u32BitsToF32(rgba);
 }
 
-export interface SegmentBuffers {
+export type SegmentBuffers = {
   /** Packed line segments: 6 floats each. */
   lines: Float32Array;
   /** Packed polygon-fill triangles: 3 floats per vertex, 3 vertices per triangle. */
   polygons: Float32Array;
 }
 
-interface ArcOptions {
+type ArcOptions = {
   minSubdivisions: number;
   maxSubdivisions: number;
   /** Approximate pixels per subdivision; arc radius determines the rest. */
@@ -117,7 +117,7 @@ function tessellateArc(
   return segs;
 }
 
-interface PolyState {
+type PolyState = {
   active: boolean;
   color: number;
   // Vertices accumulated since poly-start.

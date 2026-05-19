@@ -8,7 +8,7 @@
  * back to a CPU/Canvas2D renderer.
  */
 
-export interface ElisGpu {
+export type ElisGpu = {
   /** Active WebGPU device. */
   readonly device: GPUDevice;
   /** The canvas-bound context, already configured for `format`. */
@@ -19,7 +19,7 @@ export interface ElisGpu {
   readonly canvas: HTMLCanvasElement;
 }
 
-export interface CreateElisGpuOptions {
+export type CreateElisGpuOptions = {
   /** Optional feature names to pass to `requestDevice`. */
   requiredFeatures?: GPUFeatureName[];
   /** Optional limit overrides for `requestDevice`. */

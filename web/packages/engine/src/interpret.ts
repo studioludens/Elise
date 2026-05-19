@@ -21,12 +21,12 @@ export type DrawEvent =
       thickness: number;
     };
 
-export interface InterpretOptions extends TurtleConfig {
+export type InterpretOptions = TurtleConfig & {
   angle?: number;
   ratio?: number;
-}
+};
 
-interface ParsedArgs {
+type ParsedArgs = {
   args: number[];
   end: number;
 }

@@ -1,6 +1,6 @@
 import type { ChangeEvent } from "react";
 
-export interface SliderFieldProps {
+export type SliderFieldProps = {
   label: string;
   value: number;
   min: number;

@@ -24,7 +24,7 @@ import { WebGpuPreview } from "./components/WebGpuPreview.js";
 
 type Backend = "canvas2d" | "webgpu";
 
-interface Params {
+type Params = {
   axiom: string;
   rulesText: string;
   angle: number;

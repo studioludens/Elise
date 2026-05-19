@@ -1,7 +1,7 @@
 import type { ChangeEvent } from "react";
 import { parseRules } from "@elise/engine";
 
-export interface RuleEditorProps {
+export type RuleEditorProps = {
   value: string;
   onChange: (next: string) => void;
 }

@@ -1,10 +1,10 @@
-export interface HSV {
+export type HSV = {
   h: number;
   s: number;
   v: number;
 }
 
-export interface RGB {
+export type RGB = {
   r: number;
   g: number;
   b: number;

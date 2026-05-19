@@ -3,7 +3,7 @@ import { createElisGpu, LineRenderer, type ElisGpu } from "@elise/gpu";
 
 export type WebGpuStatus = "loading" | "ready" | "unsupported" | "error";
 
-export interface WebGpuHandle {
+export type WebGpuHandle = {
   status: WebGpuStatus;
   gpu: ElisGpu | null;
   renderer: LineRenderer | null;

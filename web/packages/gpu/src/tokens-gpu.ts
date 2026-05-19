@@ -93,7 +93,7 @@ function parseArgList(
   return { args, end: s.length - 1 };
 }
 
-export interface EncodedTokens {
+export type EncodedTokens = {
   /**
    * Raw little-endian byte buffer, length = count * TOKEN_STRIDE.
    *
@@ -170,7 +170,7 @@ export function encodeTokens(input: string): EncodedTokens {
   return { bytes, count };
 }
 
-export interface DecodedToken {
+export type DecodedToken = {
   opcode: number;
   char: string;
   arg0: number;

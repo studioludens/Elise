@@ -1,6 +1,6 @@
 import type { Rule } from "./rules.js";
 
-export interface Preset {
+export type Preset = {
   name: string;
   axiom: string;
   rules: Rule[];

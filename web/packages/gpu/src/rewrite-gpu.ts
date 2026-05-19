@@ -30,7 +30,7 @@ const SCAN_WORKGROUP = 256;
 /** Inclusive upper bound for the total output size of a single iteration. */
 const DEFAULT_MAX_OUTPUT_TOKENS = 1_048_576;
 
-export interface RewriteOptions {
+export type RewriteOptions = {
   maxRules?: number;
   maxRuleTokens?: number;
   /** Hard cap on per-iteration output length (in tokens). */
@@ -79,7 +79,7 @@ function buildRuleTables(rules: Rule[]): {
   return { entriesBytes: entries, ruleTokensBytes: ruleTokens, entryCount: rules.length };
 }
 
-interface ComputeKit {
+type ComputeKit = {
   countPipeline: GPUComputePipeline;
   countLayout: GPUBindGroupLayout;
   scanBlocksPipeline: GPUComputePipeline;

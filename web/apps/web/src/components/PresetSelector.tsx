@@ -1,7 +1,7 @@
 import type { ChangeEvent } from "react";
 import { PRESETS, type Preset } from "@elise/engine";
 
-export interface PresetSelectorProps {
+export type PresetSelectorProps = {
   value: string;
   onChange: (preset: Preset) => void;
 }

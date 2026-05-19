@@ -1,7 +1,7 @@
 import type { ChangeEvent } from "react";
 import { hexToRgb, rgbToHsv, type HSV } from "@elise/engine";
 
-export interface ColorPickerProps {
+export type ColorPickerProps = {
   /** Current color expressed as `#rrggbb`. */
   value: string;
   onChange: (hex: string, hsv: HSV) => void;

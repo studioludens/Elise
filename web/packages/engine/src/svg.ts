@@ -1,13 +1,13 @@
 import type { DrawEvent } from "./interpret.js";
 
-export interface SvgExportOptions {
+export type SvgExportOptions = {
   width?: number;
   height?: number;
   padding?: number;
   background?: string | null;
 }
 
-interface Bounds {
+type Bounds = {
   minX: number;
   minY: number;
   maxX: number;

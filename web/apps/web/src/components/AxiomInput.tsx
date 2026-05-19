@@ -1,6 +1,6 @@
 import type { ChangeEvent } from "react";
 
-export interface AxiomInputProps {
+export type AxiomInputProps = {
   value: string;
   onChange: (next: string) => void;
 }

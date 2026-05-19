@@ -1,4 +1,4 @@
-export interface ToolbarProps {
+export type ToolbarProps = {
   onExportSvg: () => void;
   onResetPreset: () => void;
 }

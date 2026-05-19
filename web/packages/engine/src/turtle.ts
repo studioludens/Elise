@@ -2,7 +2,7 @@ import type { HSV } from "./color.js";
 
 const TO_RADIANS = Math.PI / 180;
 
-export interface TurtleState {
+export type TurtleState = {
   x: number;
   y: number;
   angle: number;
@@ -11,7 +11,7 @@ export interface TurtleState {
   hsv: HSV;
 }
 
-export interface TurtleConfig {
+export type TurtleConfig = {
   initialAngle?: number;
   initialPosition?: { x: number; y: number };
   initialLineLength?: number;

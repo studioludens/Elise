@@ -4,7 +4,7 @@ import { eventsToSegments } from "@elise/gpu";
 import { computeBounds, fitView, zoomAt, type View } from "../canvas2d.js";
 import { useWebGpu } from "../useWebGpu.js";
 
-export interface WebGpuPreviewProps {
+export type WebGpuPreviewProps = {
   events: readonly DrawEvent[];
   errorMessage?: string | null;
 }

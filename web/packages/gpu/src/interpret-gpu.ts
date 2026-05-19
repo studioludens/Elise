@@ -32,10 +32,10 @@ import { SEGMENT_BYTES } from "./renderer.js";
 const DRAW_RECORD_BYTES = 32;
 const INTERPRET_WORKGROUP = 256;
 
-interface InterpretGpuOptions extends InterpretOptions {
+type InterpretGpuOptions = InterpretOptions & {
   /** Hard cap on the number of draw records emitted. */
   maxDrawRecords?: number;
-}
+};
 
 /** Pack 0xRRGGBB -> 0xRRGGBBAA u32 (A = 0xFF). */
 function colorRgba(hex: number): number {
@@ -230,7 +230,7 @@ function f32ToU32(v: number): number {
   return _scratchU32[0]!;
 }
 
-export interface InterpretGpuResult {
+export type InterpretGpuResult = {
   /** Storage buffer of `Segment` records, ready for `LineRenderer.setSegmentBuffer`. */
   segmentBuffer: GPUBuffer;
   /** Number of segments. */

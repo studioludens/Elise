@@ -18,7 +18,7 @@ import { DRAW_WGSL } from "./shaders/draw.wgsl.js";
 export const SEGMENT_BYTES = 24;
 
 /** Camera uniform: 4x4 view-proj (column-major) + viewport size. */
-export interface CameraUniform {
+export type CameraUniform = {
   /** 16 floats (mat4x4). Column-major. */
   viewProj: Float32Array;
   /** [width, height] in pixels. */

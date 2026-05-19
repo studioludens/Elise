@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import type { DrawEvent } from "@elise/engine";
 import { computeBounds, fitView, renderEvents, zoomAt, type View } from "../canvas2d.js";
 
-export interface CanvasPreviewProps {
+export type CanvasPreviewProps = {
   events: readonly DrawEvent[];
   errorMessage?: string | null;
 }

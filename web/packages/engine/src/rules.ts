@@ -1,4 +1,4 @@
-export interface Rule {
+export type Rule = {
   axiom: string;
   rule: string;
 }

@@ -1,6 +1,6 @@
 import type { Rule } from "./rules.js";
 
-export interface RewriteOptions {
+export type RewriteOptions = {
   maxLength?: number;
 }
 

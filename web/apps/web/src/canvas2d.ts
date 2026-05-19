@@ -1,6 +1,6 @@
 import type { DrawEvent } from "@elise/engine";
 
-export interface Bounds {
+export type Bounds = {
   minX: number;
   minY: number;
   maxX: number;
@@ -11,7 +11,7 @@ export interface Bounds {
  * Affine view: screen = world * scale + (offsetX, offsetY).
  * `offsetX/Y` are in CSS pixels.
  */
-export interface View {
+export type View = {
   scale: number;
   offsetX: number;
   offsetY: number;
