@@ -62,5 +62,5 @@ A starter `wrangler.toml` is included at `apps/web/wrangler.toml`.
 - ✅ Milestone 6: GPU rewriter (expand-count → scan → expand-write, ping-pong)
 - ✅ Milestone 7: GPU interpreter (Option B — CPU bracket walk + GPU expand)
 - ✅ Milestone 8: WebGPU pipeline wired into the React app behind a renderer toggle
-- ⏭ Milestone 9: `.lsys` save/load
+- ✅ Milestone 9: `.lsys` save/load (XML format mirroring the AS3 schema)
 - ⏭ Milestone 10: polish — presets gallery, autosave, error UI tuning
