@@ -1,0 +1,19 @@
+{
+  "name": "elise-web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "dev": "npm run dev --workspace @elise/web"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3"
+  }
+}
