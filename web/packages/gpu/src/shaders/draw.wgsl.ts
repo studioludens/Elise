@@ -27,7 +27,12 @@ struct Camera {
   viewProj: mat4x4<f32>,
   // x, y: viewport size in pixels (used to scale AA radius if needed).
   viewport: vec2<f32>,
-  _pad: vec2<f32>,
+  // World-units-per-CSS-pixel scale (i.e. view.scale). Used to convert
+  // CSS-pixel line thickness into the world-space offset the projection
+  // expects, so thickness stays constant on-screen regardless of zoom or
+  // auto-fit (matching the canvas2d renderer's behavior).
+  scale: f32,
+  _pad: f32,
 };
 
 @group(0) @binding(0) var<uniform> camera: Camera;
@@ -62,9 +67,11 @@ fn vs_main(
   let t   = dir / len;
   let n   = vec2<f32>(-t.y, t.x);
 
-  // Half-width plus a 0.5px AA pad. Square cap: extend each end by half-width
-  // along the segment direction.
-  let halfW = max(seg.thickness * 0.5, 0.5);
+  // thickness is in CSS pixels; divide by world-to-pixel scale so the offset
+  // is in world units that the projection will scale back to the intended
+  // pixel width.
+  let invScale = 1.0 / max(camera.scale, 1e-12);
+  let halfW = max(seg.thickness * 0.5, 0.5) * invScale;
   let cap   = halfW;
 
   // 6 vertices = 2 triangles forming a quad.
