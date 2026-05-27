@@ -11,9 +11,12 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",
-    "dev": "npm run dev --workspace @elise/web"
+    "dev": "npm run dev --workspace @elise/web",
+    "format": "prettier --write \"apps/**/*.{ts,tsx,css,json,md,html}\" \"packages/**/*.{ts,tsx,css,json,md}\"",
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx,css,json,md,html}\" \"packages/**/*.{ts,tsx,css,json,md}\""
   },
   "devDependencies": {
+    "prettier": "3.8.3",
     "typescript": "^5.6.3"
   }
 }

@@ -1,0 +1,14 @@
+.root {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-2);
+}
+
+.button {
+    padding: 6px 12px;
+    font-size: var(--text-base);
+    border: 1px solid var(--color-border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-muted);
+    cursor: pointer;
+}

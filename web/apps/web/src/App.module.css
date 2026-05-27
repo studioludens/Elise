@@ -1,0 +1,64 @@
+.root {
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    height: 100vh;
+    width: 100vw;
+    font-family: var(--font-sans);
+}
+
+.sidebar {
+    padding: var(--spacing-4);
+    border-right: 1px solid var(--color-border);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+    background: var(--color-surface);
+}
+
+.title {
+    margin: 0;
+    font-size: var(--text-lg);
+}
+
+.backendFieldset {
+    display: flex;
+    gap: var(--spacing-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 6px var(--spacing-2);
+    font-size: var(--text-sm);
+}
+
+.backendLegend {
+    padding: 0 var(--spacing-1);
+    color: var(--color-text-muted);
+}
+
+.backendOption {
+    display: flex;
+    gap: var(--spacing-1);
+    align-items: center;
+}
+
+.statsToggle {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: var(--text-sm);
+    color: var(--color-text-muted);
+}
+
+.footer {
+    margin-top: auto;
+    font-size: var(--text-xs);
+    color: var(--color-text-dim);
+}
+
+.hiddenFileInput {
+    display: none;
+}
+
+.preview {
+    position: relative;
+}
