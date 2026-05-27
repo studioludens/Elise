@@ -1,10 +1,10 @@
-export const ENGINE_VERSION = "0.1.0";
+export const ENGINE_VERSION = '0.1.0';
 
-export * from "./color.js";
-export * from "./rules.js";
-export * from "./rewrite.js";
-export * from "./turtle.js";
-export * from "./interpret.js";
-export * from "./svg.js";
-export * from "./presets.js";
-export * from "./lsys.js";
+export * from './color';
+export * from './rules';
+export * from './rewrite';
+export * from './turtle';
+export * from './interpret';
+export * from './svg';
+export * from './presets';
+export * from './lsys';

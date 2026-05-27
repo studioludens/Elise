@@ -1,0 +1,29 @@
+.root {
+    position: absolute;
+    right: var(--spacing-2);
+    bottom: var(--spacing-2);
+    margin: 0;
+    padding: var(--spacing-2) 10px;
+    background: var(--color-overlay-strong);
+    color: var(--color-overlay-text);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    line-height: var(--leading-tight);
+    border-radius: var(--radius-sm);
+    pointer-events: none;
+    user-select: none;
+}
+
+.row {
+    display: flex;
+    gap: var(--spacing-2);
+    justify-content: space-between;
+}
+
+.key {
+    opacity: 0.7;
+}
+
+.value {
+    margin: 0;
+}

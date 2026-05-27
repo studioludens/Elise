@@ -1,10 +1,10 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "outDir": "dist",
-    "lib": ["ES2022"],
-    "types": ["vitest/globals"],
-    "noEmit": true
-  },
-  "include": ["src", "tests"]
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "outDir": "dist",
+        "lib": ["ES2022"],
+        "types": ["vitest/globals"],
+        "noEmit": true
+    },
+    "include": ["src", "tests"]
 }
